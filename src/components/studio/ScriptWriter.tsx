@@ -1,0 +1,406 @@
+"use client";
+
+import { useState, useEffect, useRef } from "react";
+import { Copy, Save, Loader2, Hash } from "lucide-react";
+
+interface ScriptResult {
+  hook: string;
+  body: string;
+  cta: string;
+  full?: string;
+}
+
+interface Hashtags {
+  large: string[];
+  medium: string[];
+  small: string[];
+}
+
+export default function ScriptWriter() {
+  const [idea, setIdea] = useState("");
+  const [tone, setTone] = useState("educational");
+  const [loading, setLoading] = useState(false);
+  const [result, setResult] = useState<ScriptResult | null>(null);
+  const [error, setError] = useState("");
+  const [saved, setSaved] = useState(false);
+  const [countdown, setCountdown] = useState(0);
+  const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Hashtags
+  const [hashtags, setHashtags] = useState<Hashtags | null>(null);
+  const [loadingHashtags, setLoadingHashtags] = useState(false);
+  const [copiedTag, setCopiedTag] = useState<string | null>(null);
+  const [copiedAll, setCopiedAll] = useState(false);
+
+  useEffect(() => {
+    return () => { if (countdownRef.current) clearInterval(countdownRef.current); };
+  }, []);
+
+  const startCountdown = (seconds: number) => {
+    setCountdown(seconds);
+    countdownRef.current = setInterval(() => {
+      setCountdown((prev) => {
+        if (prev <= 1) { clearInterval(countdownRef.current!); return 0; }
+        return prev - 1;
+      });
+    }, 1000);
+  };
+
+  const generateHashtags = async (scriptText: string) => {
+    setLoadingHashtags(true);
+    setHashtags(null);
+    try {
+      const res = await fetch("/api/hashtags", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ script: scriptText }),
+      });
+      const data = await res.json();
+      if (res.ok) setHashtags(data);
+    } catch {
+      // silent — hashtags are optional
+    } finally {
+      setLoadingHashtags(false);
+    }
+  };
+
+  const handleGenerate = async () => {
+    if (!idea.trim()) return;
+    setLoading(true);
+    setError("");
+    setResult(null);
+    setHashtags(null);
+
+    try {
+      const res = await fetch("/api/script", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ idea, tone }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        if (res.status === 429 && data.retryAfter) startCountdown(data.retryAfter);
+        throw new Error(data.error);
+      }
+      setResult(data);
+      // Generate hashtags from full script text
+      const fullText = data.full || `${data.hook}\n${data.body}\n${data.cta}`;
+      generateHashtags(fullText);
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "שגיאה ביצירת הסקריפט");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCopyAll = () => {
+    if (!result) return;
+    const text = `פתיחה:\n${result.hook}\n\nגוף הסרטון:\n${result.body}\n\nסיום:\n${result.cta}`;
+    navigator.clipboard.writeText(text);
+    setSaved(true);
+    setTimeout(() => setSaved(false), 2000);
+  };
+
+  const handleSave = async () => {
+    if (!result) return;
+    try {
+      await fetch("/api/scripts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ idea, tone, hook: result.hook, body: result.body, cta: result.cta }),
+      });
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
+    } catch {
+      // silent fail
+    }
+  };
+
+  const handleCopyTag = (tag: string) => {
+    navigator.clipboard.writeText(tag);
+    setCopiedTag(tag);
+    setTimeout(() => setCopiedTag(null), 1500);
+  };
+
+  const handleCopyAllTags = () => {
+    if (!hashtags) return;
+    const all = [...hashtags.large, ...hashtags.medium, ...hashtags.small].join(" ");
+    navigator.clipboard.writeText(all);
+    setCopiedAll(true);
+    setTimeout(() => setCopiedAll(false), 2000);
+  };
+
+  const allTags = hashtags ? [...hashtags.large, ...hashtags.medium, ...hashtags.small] : [];
+
+  return (
+    <div className="flex flex-col gap-6" dir="rtl">
+      <div className="flex flex-col lg:flex-row gap-6">
+        {/* Input panel */}
+        <div className="lg:w-2/5 flex flex-col gap-4">
+          <h2 className="text-xl font-bold text-gray-800">כותב סקריפטים</h2>
+          <p className="text-sm text-gray-500">הכנס רעיון וקבל סקריפט מלא לסרטון</p>
+
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              רעיון לסרטון
+            </label>
+            <textarea
+              value={idea}
+              onChange={(e) => setIdea(e.target.value)}
+              placeholder="לדוגמה: 5 טיפים לצמיחה מהירה בטיקטוק לעסקים קטנים"
+              rows={5}
+              className="w-full border border-gray-200 rounded-2xl p-4 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              טון הסרטון
+            </label>
+            <select
+              value={tone}
+              onChange={(e) => setTone(e.target.value)}
+              className="w-full border border-gray-200 rounded-2xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+            >
+              <option value="funny">😄 מצחיק וקליל</option>
+              <option value="serious">💼 רציני ומקצועי</option>
+              <option value="inspirational">🌟 מעורר השראה</option>
+              <option value="educational">📚 חינוכי ומלמד</option>
+            </select>
+          </div>
+
+          <button
+            onClick={handleGenerate}
+            disabled={loading || !idea.trim() || countdown > 0}
+            className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 text-white font-bold py-4 rounded-2xl transition flex items-center justify-center gap-2 text-base"
+          >
+            {loading ? (
+              <>
+                <Loader2 className="w-5 h-5 animate-spin" />
+                יוצר סקריפט...
+              </>
+            ) : countdown > 0 ? (
+              `המתן ${countdown}s...`
+            ) : (
+              "✨ צור סקריפט"
+            )}
+          </button>
+
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-700 rounded-2xl p-4 text-sm">
+              {error}
+              {countdown > 0 && (
+                <p className="mt-2 font-bold">ניתן לנסות שוב בעוד {countdown} שניות...</p>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Output panel */}
+        <div className="lg:w-3/5 flex flex-col gap-4">
+          {!result && !loading && (
+            <div className="flex-1 border-2 border-dashed border-gray-200 rounded-2xl flex items-center justify-center text-gray-400 min-h-64">
+              <div className="text-center">
+                <div className="text-4xl mb-3">✍️</div>
+                <p className="font-medium">הסקריפט שלך יופיע כאן</p>
+                <p className="text-sm mt-1">הכנס רעיון ולחץ על &quot;צור סקריפט&quot;</p>
+              </div>
+            </div>
+          )}
+
+          {loading && (
+            <div className="flex-1 border-2 border-dashed border-blue-200 rounded-2xl flex items-center justify-center min-h-64">
+              <div className="text-center text-blue-500">
+                <Loader2 className="w-10 h-10 animate-spin mx-auto mb-3" />
+                <p className="font-medium">מייצר סקריפט...</p>
+                <div className="flex gap-1 justify-center mt-2">
+                  <span className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
+                  <span className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
+                  <span className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {result && (
+            <>
+              <div className="flex items-center justify-between">
+                <h3 className="font-bold text-gray-700">הסקריפט המוכן</h3>
+                <button
+                  onClick={handleCopyAll}
+                  className="flex items-center gap-2 text-sm text-blue-600 hover:text-blue-800 font-medium bg-blue-50 hover:bg-blue-100 px-4 py-2 rounded-full transition"
+                >
+                  <Copy className="w-4 h-4" />
+                  {saved ? "הועתק!" : "העתק הכל"}
+                </button>
+              </div>
+
+              <div className="bg-blue-50 border border-blue-200 rounded-2xl p-5">
+                <div className="flex items-center gap-2 mb-3">
+                  <span className="bg-blue-600 text-white text-xs font-bold px-3 py-1 rounded-full">
+                    פתיחה — 5 שניות ראשונות
+                  </span>
+                </div>
+                <div
+                  contentEditable
+                  suppressContentEditableWarning
+                  className="text-gray-800 text-sm leading-relaxed min-h-8 focus:outline-none"
+                >
+                  {result.hook}
+                </div>
+              </div>
+
+              <div className="bg-gray-50 border border-gray-200 rounded-2xl p-5">
+                <div className="flex items-center gap-2 mb-3">
+                  <span className="bg-gray-600 text-white text-xs font-bold px-3 py-1 rounded-full">
+                    גוף הסרטון
+                  </span>
+                </div>
+                <div
+                  contentEditable
+                  suppressContentEditableWarning
+                  className="text-gray-800 text-sm leading-relaxed min-h-16 whitespace-pre-line focus:outline-none"
+                >
+                  {result.body}
+                </div>
+              </div>
+
+              <div className="bg-amber-50 border border-amber-200 rounded-2xl p-5">
+                <div className="flex items-center gap-2 mb-3">
+                  <span className="bg-amber-500 text-white text-xs font-bold px-3 py-1 rounded-full">
+                    סיום — קריאה לפעולה
+                  </span>
+                </div>
+                <div
+                  contentEditable
+                  suppressContentEditableWarning
+                  className="text-gray-800 text-sm leading-relaxed min-h-8 focus:outline-none"
+                >
+                  {result.cta}
+                </div>
+              </div>
+
+              <button
+                onClick={handleSave}
+                className="flex items-center justify-center gap-2 w-full border-2 border-blue-200 text-blue-600 hover:bg-blue-50 font-bold py-3 rounded-2xl transition"
+              >
+                <Save className="w-4 h-4" />
+                {saved ? "נשמר! ✓" : "שמור סקריפט"}
+              </button>
+            </>
+          )}
+        </div>
+      </div>
+
+      {/* ── Hashtag Section ── */}
+      {(result || loadingHashtags) && (
+        <div className="bg-white border border-gray-200 rounded-2xl p-6 flex flex-col gap-4">
+          <div className="flex items-center justify-between">
+            <h3 className="font-bold text-gray-800 flex items-center gap-2">
+              <Hash className="w-5 h-5 text-blue-600" />
+              האשטאגים מומלצים
+            </h3>
+            {hashtags && allTags.length > 0 && (
+              <button
+                onClick={handleCopyAllTags}
+                className="flex items-center gap-2 text-sm text-blue-600 hover:text-blue-800 font-medium bg-blue-50 hover:bg-blue-100 px-4 py-2 rounded-full transition"
+              >
+                <Copy className="w-4 h-4" />
+                {copiedAll ? "הועתק!" : "העתק הכל"}
+              </button>
+            )}
+          </div>
+
+          {loadingHashtags && (
+            <div className="flex items-center gap-3 text-gray-400 py-4">
+              <Loader2 className="w-5 h-5 animate-spin text-blue-500" />
+              <span className="text-sm">מייצר האשטאגים...</span>
+            </div>
+          )}
+
+          {hashtags && (
+            <div className="flex flex-col gap-4">
+              {/* Large */}
+              {hashtags.large.length > 0 && (
+                <div>
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="text-xs font-bold text-red-600 bg-red-50 border border-red-200 px-2.5 py-1 rounded-full">
+                      🔥 גדולים — 1M+
+                    </span>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {hashtags.large.map((tag) => (
+                      <button
+                        key={tag}
+                        onClick={() => handleCopyTag(tag)}
+                        className={`px-3 py-1.5 rounded-full text-sm font-medium transition border ${
+                          copiedTag === tag
+                            ? "bg-green-100 border-green-300 text-green-700"
+                            : "bg-red-50 border-red-200 text-red-700 hover:bg-red-100"
+                        }`}
+                      >
+                        {copiedTag === tag ? "✓ הועתק" : tag}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Medium */}
+              {hashtags.medium.length > 0 && (
+                <div>
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="text-xs font-bold text-amber-600 bg-amber-50 border border-amber-200 px-2.5 py-1 rounded-full">
+                      ⚡ בינוניים — 100K–1M
+                    </span>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {hashtags.medium.map((tag) => (
+                      <button
+                        key={tag}
+                        onClick={() => handleCopyTag(tag)}
+                        className={`px-3 py-1.5 rounded-full text-sm font-medium transition border ${
+                          copiedTag === tag
+                            ? "bg-green-100 border-green-300 text-green-700"
+                            : "bg-amber-50 border-amber-200 text-amber-700 hover:bg-amber-100"
+                        }`}
+                      >
+                        {copiedTag === tag ? "✓ הועתק" : tag}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Small */}
+              {hashtags.small.length > 0 && (
+                <div>
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="text-xs font-bold text-blue-600 bg-blue-50 border border-blue-200 px-2.5 py-1 rounded-full">
+                      🎯 קטנים — עד 100K
+                    </span>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {hashtags.small.map((tag) => (
+                      <button
+                        key={tag}
+                        onClick={() => handleCopyTag(tag)}
+                        className={`px-3 py-1.5 rounded-full text-sm font-medium transition border ${
+                          copiedTag === tag
+                            ? "bg-green-100 border-green-300 text-green-700"
+                            : "bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100"
+                        }`}
+                      >
+                        {copiedTag === tag ? "✓ הועתק" : tag}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
