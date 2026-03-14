@@ -29,6 +29,16 @@ export default function Footer() {
                   צור קשר
                 </Link>
               </li>
+              <li>
+                <Link href="/tos" className="hover:text-blue-600 transition-colors">
+                  תנאי שימוש
+                </Link>
+              </li>
+              <li>
+                <Link href="/privacy" className="hover:text-blue-600 transition-colors">
+                  פרטיות
+                </Link>
+              </li>
             </ul>
           </nav>
         </div>
@@ -36,7 +46,7 @@ export default function Footer() {
         {/* Bottom row */}
         <div className="mt-8 text-center space-y-1">
           <p className="text-sm text-gray-500">נבנה בישראל 🇮🇱</p>
-          <p className="text-xs text-gray-400">© 2024 ViewIL. כל הזכויות שמורות.</p>
+          <p className="text-xs text-gray-400">© 2026 ViewIL. כל הזכויות שמורות.</p>
         </div>
       </div>
     </footer>

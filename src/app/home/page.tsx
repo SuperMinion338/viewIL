@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useSession } from "next-auth/react";
+import { AnimatePresence, motion } from "framer-motion";
 import Sidebar from "@/components/studio/Sidebar";
 import ScriptWriter from "@/components/studio/ScriptWriter";
 import HookGenerator from "@/components/studio/HookGenerator";
@@ -68,7 +69,17 @@ export default function StudioPage() {
 
         {/* Tool content */}
         <main className="flex-1 p-6 max-w-6xl w-full">
-          {renderTool()}
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={activeTool}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.18, ease: "easeInOut" }}
+            >
+              {renderTool()}
+            </motion.div>
+          </AnimatePresence>
         </main>
       </div>
     </div>

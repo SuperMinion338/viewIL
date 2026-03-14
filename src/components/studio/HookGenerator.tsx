@@ -79,9 +79,11 @@ export default function HookGenerator() {
               { value: "instagram", label: "אינסטגרם", emoji: "📸" },
               { value: "youtube", label: "יוטיוב", emoji: "▶️" },
             ].map((p) => (
-              <button
+              <motion.button
                 key={p.value}
                 onClick={() => setPlatform(p.value)}
+                whileHover={{ scale: 1.04 }}
+                whileTap={{ scale: 0.96 }}
                 className={`flex-1 py-2 px-3 rounded-xl text-sm font-medium transition border-2 ${
                   platform === p.value
                     ? "border-blue-600 bg-blue-50 text-blue-700"
@@ -89,14 +91,16 @@ export default function HookGenerator() {
                 }`}
               >
                 {p.emoji} {p.label}
-              </button>
+              </motion.button>
             ))}
           </div>
         </div>
 
-        <button
+        <motion.button
           onClick={handleGenerate}
           disabled={loading || !topic.trim()}
+          whileHover={{ scale: loading ? 1 : 1.02 }}
+          whileTap={{ scale: loading ? 1 : 0.97 }}
           className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 text-white font-bold py-4 rounded-2xl transition flex items-center justify-center gap-2"
         >
           {loading ? (
@@ -107,7 +111,7 @@ export default function HookGenerator() {
           ) : (
             "🎣 צור 5 פתיחות"
           )}
-        </button>
+        </motion.button>
 
         {error && (
           <div className="bg-red-50 border border-red-200 text-red-700 rounded-xl p-3 text-sm">
@@ -136,13 +140,15 @@ export default function HookGenerator() {
                   </div>
                   <p className="text-gray-800 text-sm leading-relaxed">{hook.text}</p>
                 </div>
-                <button
+                <motion.button
                   onClick={() => handleCopy(hook.text, index)}
+                  whileHover={{ scale: 1.08 }}
+                  whileTap={{ scale: 0.92 }}
                   className="shrink-0 flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 px-3 py-2 rounded-full transition font-medium"
                 >
                   <Copy className="w-3 h-3" />
                   {copiedIndex === index ? "הועתק!" : "העתק"}
-                </button>
+                </motion.button>
               </motion.div>
             ))}
           </div>

@@ -5,6 +5,7 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Sidebar from "@/components/studio/Sidebar";
+import Link from "next/link";
 import {
   Camera, Save, Lock, Instagram, CheckCircle, Crown,
 } from "lucide-react";
@@ -421,6 +422,17 @@ export default function ProfilePage() {
               </section>
             </>
           )}
+
+          {/* Legal links */}
+          <div className="pt-2 pb-4 text-center text-xs text-gray-400 flex items-center justify-center gap-3">
+            <Link href="/tos" className="hover:text-blue-600 transition-colors">
+              תנאי שימוש
+            </Link>
+            <span>·</span>
+            <Link href="/privacy" className="hover:text-blue-600 transition-colors">
+              מדיניות פרטיות
+            </Link>
+          </div>
         </main>
       </div>
 

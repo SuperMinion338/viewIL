@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Copy, Save, Loader2, Hash } from "lucide-react";
+import { Copy, Save, Loader2, Hash, CheckCircle2 } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface ScriptResult {
   hook: string;
@@ -23,6 +24,7 @@ export default function ScriptWriter() {
   const [result, setResult] = useState<ScriptResult | null>(null);
   const [error, setError] = useState("");
   const [saved, setSaved] = useState(false);
+  const [justGenerated, setJustGenerated] = useState(false);
   const [countdown, setCountdown] = useState(0);
   const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -83,6 +85,8 @@ export default function ScriptWriter() {
         throw new Error(data.error);
       }
       setResult(data);
+      setJustGenerated(true);
+      setTimeout(() => setJustGenerated(false), 1200);
       // Generate hashtags from full script text
       const fullText = data.full || `${data.hook}\n${data.body}\n${data.cta}`;
       generateHashtags(fullText);
@@ -169,9 +173,11 @@ export default function ScriptWriter() {
             </select>
           </div>
 
-          <button
+          <motion.button
             onClick={handleGenerate}
             disabled={loading || !idea.trim() || countdown > 0}
+            whileHover={{ scale: loading || countdown > 0 ? 1 : 1.02 }}
+            whileTap={{ scale: loading || countdown > 0 ? 1 : 0.97 }}
             className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 text-white font-bold py-4 rounded-2xl transition flex items-center justify-center gap-2 text-base"
           >
             {loading ? (
@@ -184,7 +190,7 @@ export default function ScriptWriter() {
             ) : (
               "✨ צור סקריפט"
             )}
-          </button>
+          </motion.button>
 
           {error && (
             <div className="bg-red-50 border border-red-200 text-red-700 rounded-2xl p-4 text-sm">
@@ -197,98 +203,155 @@ export default function ScriptWriter() {
         </div>
 
         {/* Output panel */}
-        <div className="lg:w-3/5 flex flex-col gap-4">
-          {!result && !loading && (
-            <div className="flex-1 border-2 border-dashed border-gray-200 rounded-2xl flex items-center justify-center text-gray-400 min-h-64">
-              <div className="text-center">
-                <div className="text-4xl mb-3">✍️</div>
-                <p className="font-medium">הסקריפט שלך יופיע כאן</p>
-                <p className="text-sm mt-1">הכנס רעיון ולחץ על &quot;צור סקריפט&quot;</p>
-              </div>
-            </div>
-          )}
-
-          {loading && (
-            <div className="flex-1 border-2 border-dashed border-blue-200 rounded-2xl flex items-center justify-center min-h-64">
-              <div className="text-center text-blue-500">
-                <Loader2 className="w-10 h-10 animate-spin mx-auto mb-3" />
-                <p className="font-medium">מייצר סקריפט...</p>
-                <div className="flex gap-1 justify-center mt-2">
-                  <span className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
-                  <span className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
-                  <span className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
-                </div>
-              </div>
-            </div>
-          )}
-
-          {result && (
-            <>
-              <div className="flex items-center justify-between">
-                <h3 className="font-bold text-gray-700">הסקריפט המוכן</h3>
-                <button
-                  onClick={handleCopyAll}
-                  className="flex items-center gap-2 text-sm text-blue-600 hover:text-blue-800 font-medium bg-blue-50 hover:bg-blue-100 px-4 py-2 rounded-full transition"
-                >
-                  <Copy className="w-4 h-4" />
-                  {saved ? "הועתק!" : "העתק הכל"}
-                </button>
-              </div>
-
-              <div className="bg-blue-50 border border-blue-200 rounded-2xl p-5">
-                <div className="flex items-center gap-2 mb-3">
-                  <span className="bg-blue-600 text-white text-xs font-bold px-3 py-1 rounded-full">
-                    פתיחה — 5 שניות ראשונות
-                  </span>
-                </div>
-                <div
-                  contentEditable
-                  suppressContentEditableWarning
-                  className="text-gray-800 text-sm leading-relaxed min-h-8 focus:outline-none"
-                >
-                  {result.hook}
-                </div>
-              </div>
-
-              <div className="bg-gray-50 border border-gray-200 rounded-2xl p-5">
-                <div className="flex items-center gap-2 mb-3">
-                  <span className="bg-gray-600 text-white text-xs font-bold px-3 py-1 rounded-full">
-                    גוף הסרטון
-                  </span>
-                </div>
-                <div
-                  contentEditable
-                  suppressContentEditableWarning
-                  className="text-gray-800 text-sm leading-relaxed min-h-16 whitespace-pre-line focus:outline-none"
-                >
-                  {result.body}
-                </div>
-              </div>
-
-              <div className="bg-amber-50 border border-amber-200 rounded-2xl p-5">
-                <div className="flex items-center gap-2 mb-3">
-                  <span className="bg-amber-500 text-white text-xs font-bold px-3 py-1 rounded-full">
-                    סיום — קריאה לפעולה
-                  </span>
-                </div>
-                <div
-                  contentEditable
-                  suppressContentEditableWarning
-                  className="text-gray-800 text-sm leading-relaxed min-h-8 focus:outline-none"
-                >
-                  {result.cta}
-                </div>
-              </div>
-
-              <button
-                onClick={handleSave}
-                className="flex items-center justify-center gap-2 w-full border-2 border-blue-200 text-blue-600 hover:bg-blue-50 font-bold py-3 rounded-2xl transition"
+        <div className="lg:w-3/5 flex flex-col gap-4 relative">
+          <AnimatePresence mode="wait">
+            {!result && !loading && (
+              <motion.div
+                key="empty"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="flex-1 border-2 border-dashed border-gray-200 rounded-2xl flex items-center justify-center text-gray-400 min-h-64"
               >
-                <Save className="w-4 h-4" />
-                {saved ? "נשמר! ✓" : "שמור סקריפט"}
-              </button>
-            </>
-          )}
+                <div className="text-center">
+                  <div className="text-4xl mb-3">✍️</div>
+                  <p className="font-medium">הסקריפט שלך יופיע כאן</p>
+                  <p className="text-sm mt-1">הכנס רעיון ולחץ על &quot;צור סקריפט&quot;</p>
+                </div>
+              </motion.div>
+            )}
+
+            {loading && (
+              <motion.div
+                key="skeleton"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="flex-1 flex flex-col gap-4"
+              >
+                {/* Skeleton cards */}
+                {[
+                  { color: "bg-blue-50 border-blue-100", barColor: "bg-blue-200", lines: [80, 60] },
+                  { color: "bg-gray-50 border-gray-100", barColor: "bg-gray-200", lines: [90, 70, 55] },
+                  { color: "bg-amber-50 border-amber-100", barColor: "bg-amber-200", lines: [75, 50] },
+                ].map((s, i) => (
+                  <motion.div
+                    key={i}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: i * 0.08 }}
+                    className={`border rounded-2xl p-5 ${s.color}`}
+                  >
+                    <div className={`h-5 w-28 rounded-full ${s.barColor} mb-4 animate-pulse`} />
+                    {s.lines.map((w, j) => (
+                      <div
+                        key={j}
+                        className={`h-3 rounded-full ${s.barColor} mb-2 animate-pulse`}
+                        style={{ width: `${w}%`, animationDelay: `${j * 100}ms` }}
+                      />
+                    ))}
+                  </motion.div>
+                ))}
+              </motion.div>
+            )}
+
+            {result && (
+              <motion.div
+                key="result"
+                initial={{ opacity: 0, scale: 0.98 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                className="flex flex-col gap-4"
+              >
+                {/* Success flash overlay */}
+                <AnimatePresence>
+                  {justGenerated && (
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 1.1 }}
+                      transition={{ duration: 0.25 }}
+                      className="absolute inset-0 flex items-center justify-center pointer-events-none z-20"
+                    >
+                      <div className="bg-green-500 text-white rounded-2xl px-6 py-3 flex items-center gap-2 shadow-lg text-sm font-bold">
+                        <CheckCircle2 className="w-5 h-5" />
+                        הסקריפט מוכן!
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
+                <div className="flex items-center justify-between">
+                  <h3 className="font-bold text-gray-700">הסקריפט המוכן</h3>
+                  <motion.button
+                    onClick={handleCopyAll}
+                    whileHover={{ scale: 1.04 }}
+                    whileTap={{ scale: 0.96 }}
+                    className="flex items-center gap-2 text-sm text-blue-600 hover:text-blue-800 font-medium bg-blue-50 hover:bg-blue-100 px-4 py-2 rounded-full transition"
+                  >
+                    <Copy className="w-4 h-4" />
+                    {saved ? "הועתק!" : "העתק הכל"}
+                  </motion.button>
+                </div>
+
+                <div className="bg-blue-50 border border-blue-200 rounded-2xl p-5">
+                  <div className="flex items-center gap-2 mb-3">
+                    <span className="bg-blue-600 text-white text-xs font-bold px-3 py-1 rounded-full">
+                      פתיחה — 5 שניות ראשונות
+                    </span>
+                  </div>
+                  <div
+                    contentEditable
+                    suppressContentEditableWarning
+                    className="text-gray-800 text-sm leading-relaxed min-h-8 focus:outline-none"
+                  >
+                    {result.hook}
+                  </div>
+                </div>
+
+                <div className="bg-gray-50 border border-gray-200 rounded-2xl p-5">
+                  <div className="flex items-center gap-2 mb-3">
+                    <span className="bg-gray-600 text-white text-xs font-bold px-3 py-1 rounded-full">
+                      גוף הסרטון
+                    </span>
+                  </div>
+                  <div
+                    contentEditable
+                    suppressContentEditableWarning
+                    className="text-gray-800 text-sm leading-relaxed min-h-16 whitespace-pre-line focus:outline-none"
+                  >
+                    {result.body}
+                  </div>
+                </div>
+
+                <div className="bg-amber-50 border border-amber-200 rounded-2xl p-5">
+                  <div className="flex items-center gap-2 mb-3">
+                    <span className="bg-amber-500 text-white text-xs font-bold px-3 py-1 rounded-full">
+                      סיום — קריאה לפעולה
+                    </span>
+                  </div>
+                  <div
+                    contentEditable
+                    suppressContentEditableWarning
+                    className="text-gray-800 text-sm leading-relaxed min-h-8 focus:outline-none"
+                  >
+                    {result.cta}
+                  </div>
+                </div>
+
+                <motion.button
+                  onClick={handleSave}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.97 }}
+                  className="flex items-center justify-center gap-2 w-full border-2 border-blue-200 text-blue-600 hover:bg-blue-50 font-bold py-3 rounded-2xl transition"
+                >
+                  <Save className="w-4 h-4" />
+                  {saved ? "נשמר! ✓" : "שמור סקריפט"}
+                </motion.button>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </div>
 
