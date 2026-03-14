@@ -26,8 +26,8 @@ const tools = [
 
 // Standalone pages linked from sidebar (not studio tools)
 const standalonePages = [
-  { href: "/home/income", id: "income", icon: CircleDollarSign, label: "הכנסות" },
-  { href: "/home/profile", id: "profile", icon: User, label: "הפרופיל שלי" },
+  { href: "/studio/income", id: "income", icon: CircleDollarSign, label: "הכנסות" },
+  { href: "/studio/profile", id: "profile", icon: User, label: "הפרופיל שלי" },
 ];
 
 interface SidebarProps {
@@ -46,7 +46,7 @@ export default function Sidebar({
   userImage,
 }: SidebarProps) {
   const pathname = usePathname();
-  const isStandalonePage = pathname !== "/home";
+  const isStandalonePage = pathname !== "/studio";
 
   const initials = userName
     ? userName
@@ -71,7 +71,7 @@ export default function Sidebar({
           <Image src="/logo-transparent.png" alt="ViewIL" width={32} height={32} className="shrink-0" />
           <ChevronLeft className="w-3 h-3 text-white/20 group-hover:text-white/50 transition mr-auto" />
         </Link>
-        <p className="text-white/30 text-xs mt-1 font-medium">סטודיו יוצרים</p>
+        <p className="text-white/70 text-xs mt-1 font-semibold tracking-wide">סטודיו יוצרים</p>
       </div>
 
       {/* Nav */}
@@ -140,7 +140,7 @@ export default function Sidebar({
       {/* User section */}
       <div className="px-3 py-4 border-t border-white/8">
         <Link
-          href="/home/profile"
+          href="/studio/profile"
           className="flex items-center gap-3 px-2 mb-3 hover:bg-white/5 rounded-xl py-1.5 transition"
         >
           <div className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center text-white font-bold text-sm shrink-0 shadow-[0_0_12px_rgba(37,99,235,0.4)] overflow-hidden">

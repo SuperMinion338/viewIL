@@ -34,7 +34,7 @@ function LoginForm() {
         console.error("[login] signIn error:", res.error, "status:", res.status);
         setError("אימייל או סיסמה שגויים");
       } else {
-        const callbackUrl = searchParams.get("callbackUrl") || "/home";
+        const callbackUrl = searchParams.get("callbackUrl") || "/studio";
         router.push(callbackUrl);
         router.refresh();
       }

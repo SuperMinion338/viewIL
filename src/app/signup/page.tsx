@@ -45,7 +45,7 @@ export default function SignupPage() {
       if (signInRes?.error) {
         router.push("/login");
       } else {
-        router.push("/home");
+        router.push("/studio");
       }
     } catch {
       setError("שגיאה בהרשמה. נסה שוב.");

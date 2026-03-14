@@ -96,7 +96,7 @@ export default function Hero() {
           className="flex flex-col sm:flex-row gap-4 justify-center items-center"
         >
           <Link
-            href="/home"
+            href="/studio"
             className="bg-blue-600 hover:bg-blue-700 text-white font-bold px-8 py-4 rounded-full text-lg transition-all shadow-lg hover:shadow-blue-200 hover:shadow-xl"
           >
             התחל בחינם

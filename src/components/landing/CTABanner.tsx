@@ -1,9 +1,23 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
 
 export default function CTABanner() {
+  const [userCount, setUserCount] = useState<number | null>(null);
+
+  useEffect(() => {
+    fetch("/api/user-count")
+      .then((r) => r.json())
+      .then((d) => setUserCount(d.count))
+      .catch(() => {});
+  }, []);
+
+  const countText = userCount !== null
+    ? userCount.toLocaleString("he-IL") + "+"
+    : "...";
+
   return (
     <section dir="rtl" className="relative bg-blue-600 py-24 overflow-hidden">
       {/* Animated SVG waves */}
@@ -52,7 +66,7 @@ export default function CTABanner() {
           transition={{ delay: 0.15, duration: 0.5 }}
           className="text-blue-200 text-lg mb-10"
         >
-          הצטרף ל-2,000+ יוצרי תוכן ישראלים שכבר משתמשים ב-ViewIL
+          הצטרף ל-{countText} יוצרי תוכן ישראלים שכבר משתמשים ב-ViewIL
         </motion.p>
 
         <motion.div
@@ -62,7 +76,7 @@ export default function CTABanner() {
           transition={{ delay: 0.3, duration: 0.5 }}
         >
           <Link
-            href="/home"
+            href="/studio"
             className="inline-block bg-white text-blue-600 font-bold text-lg px-10 py-4 rounded-full hover:bg-blue-50 transition-all shadow-lg hover:shadow-xl"
           >
             צור חשבון חינם
