@@ -17,7 +17,7 @@ function AnimatedCounter({ target }: { target: number }) {
   const isInView = useInView(ref, { once: true });
 
   useEffect(() => {
-    if (!isInView) return;
+    if (!isInView || target === 0) return;
     let start = 0;
     const duration = 1500;
     const stepTime = 20;
@@ -45,12 +45,23 @@ function AnimatedCounter({ target }: { target: number }) {
 }
 
 export default function SocialProof() {
+  const [userCount, setUserCount] = useState(0);
+
+  useEffect(() => {
+    fetch("/api/user-count")
+      .then((res) => res.json())
+      .then((data) => {
+        if (typeof data.count === "number") setUserCount(data.count);
+      })
+      .catch(() => {});
+  }, []);
+
   return (
     <section dir="rtl" className="bg-gray-50 border-t border-b border-gray-200 py-8">
       <div className="max-w-4xl mx-auto px-4 flex flex-col md:flex-row items-center justify-center gap-8">
         <p className="text-gray-700 text-lg text-center">
           כבר משתמשים בנו מעל
-          <AnimatedCounter target={2000} />
+          <AnimatedCounter target={userCount} />
           יוצרים ישראלים
         </p>
 

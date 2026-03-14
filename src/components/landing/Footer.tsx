@@ -1,5 +1,24 @@
 import Link from "next/link";
 
+function InstagramIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.75}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+    >
+      <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
+      <circle cx="12" cy="12" r="4" />
+      <circle cx="17.5" cy="6.5" r="0.5" fill="currentColor" stroke="none" />
+    </svg>
+  );
+}
+
 export default function Footer() {
   return (
     <footer dir="rtl" className="bg-white border-t border-gray-200 py-10">
@@ -13,7 +32,7 @@ export default function Footer() {
 
           {/* Nav links */}
           <nav>
-            <ul className="flex gap-6 text-sm text-gray-600">
+            <ul className="flex flex-wrap justify-center gap-6 text-sm text-gray-600">
               <li>
                 <Link href="/" className="hover:text-blue-600 transition-colors">
                   בית
@@ -39,13 +58,25 @@ export default function Footer() {
                   פרטיות
                 </Link>
               </li>
+              <li>
+                <a
+                  href="https://instagram.com/_view.il"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-1.5 hover:text-pink-500 transition-colors"
+                  aria-label="ViewIL באינסטגרם"
+                >
+                  <InstagramIcon className="w-4 h-4" />
+                  אינסטגרם
+                </a>
+              </li>
             </ul>
           </nav>
         </div>
 
         {/* Bottom row */}
         <div className="mt-8 text-center space-y-1">
-          <p className="text-sm text-gray-500">נבנה בישראל 🇮🇱</p>
+          <p className="text-sm text-gray-500">נבנה ע״י עידו שדה 🇮🇱</p>
           <p className="text-xs text-gray-400">© 2026 ViewIL. כל הזכויות שמורות.</p>
         </div>
       </div>
