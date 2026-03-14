@@ -2,12 +2,13 @@
 
 import { useState } from "react";
 import { signIn } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Loader2, Eye, EyeOff } from "lucide-react";
 
 export default function LoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -33,7 +34,9 @@ export default function LoginPage() {
         console.error("[login] signIn error:", res.error, "status:", res.status);
         setError("אימייל או סיסמה שגויים");
       } else {
-        router.push("/home");
+        const callbackUrl = searchParams.get("callbackUrl") || "/home";
+        router.push(callbackUrl);
+        router.refresh();
       }
     } catch (err) {
       console.error("[login] unexpected error:", err);
