@@ -169,8 +169,8 @@ export default function TermsOfServicePage() {
 
           <div className="pt-4 border-t border-gray-100 text-sm text-gray-400">
             לשאלות בנוגע לתנאי השימוש, אנא צרו קשר:{" "}
-            <a href="mailto:support@viewil.co.il" className="text-blue-600 hover:underline">
-              support@viewil.co.il
+            <a href="mailto:viewil.support@gmail.com" className="text-blue-600 hover:underline">
+              viewil.support@gmail.com
             </a>
           </div>
         </div>

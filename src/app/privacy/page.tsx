@@ -172,8 +172,8 @@ export default function PrivacyPolicyPage() {
             </ul>
             <p>
               לממש כל אחת מהזכויות הנ&quot;ל, שלחו בקשה לכתובת{" "}
-              <a href="mailto:support@viewil.co.il" className="text-blue-600 hover:underline">
-                support@viewil.co.il
+              <a href="mailto:viewil.support@gmail.com" className="text-blue-600 hover:underline">
+                viewil.support@gmail.com
               </a>
               . נגיב תוך 30 יום מקבלת הבקשה.
             </p>
@@ -189,8 +189,8 @@ export default function PrivacyPolicyPage() {
             <ul className="list-none flex flex-col gap-1 mr-2">
               <li>
                 <strong className="text-gray-700">דוא&quot;ל:</strong>{" "}
-                <a href="mailto:support@viewil.co.il" className="text-blue-600 hover:underline">
-                  support@viewil.co.il
+                <a href="mailto:viewil.support@gmail.com" className="text-blue-600 hover:underline">
+                  viewil.support@gmail.com
                 </a>
               </li>
               <li>
@@ -213,8 +213,8 @@ export default function PrivacyPolicyPage() {
 
           <div className="pt-4 border-t border-gray-100 text-sm text-gray-400">
             לשאלות בנוגע למדיניות הפרטיות, אנא צרו קשר:{" "}
-            <a href="mailto:support@viewil.co.il" className="text-blue-600 hover:underline">
-              support@viewil.co.il
+            <a href="mailto:viewil.support@gmail.com" className="text-blue-600 hover:underline">
+              viewil.support@gmail.com
             </a>
           </div>
         </div>
