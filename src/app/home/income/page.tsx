@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { Suspense, useState, useEffect, useCallback } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import { Loader2 as LoaderIcon } from "lucide-react";
 import Sidebar from "@/components/studio/Sidebar";
 import {
   PlusCircle, Trash2, Download, Loader2, TrendingUp,
@@ -51,7 +52,7 @@ const emptyForm = {
 
 type SortKey = "date" | "amount";
 
-export default function IncomePage() {
+function IncomeContent() {
   const { data: session } = useSession();
   const router = useRouter();
 
@@ -433,5 +434,17 @@ export default function IncomePage() {
         </main>
       </div>
     </div>
+  );
+}
+
+export default function IncomePage() {
+  return (
+    <Suspense fallback={
+      <div className="flex min-h-screen items-center justify-center bg-gray-50">
+        <LoaderIcon className="w-8 h-8 animate-spin text-blue-600" />
+      </div>
+    }>
+      <IncomeContent />
+    </Suspense>
   );
 }

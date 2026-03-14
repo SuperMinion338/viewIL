@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { Suspense, useState, useEffect, useRef } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
@@ -23,7 +23,7 @@ interface ProfileData {
   scripts_this_month: number;
 }
 
-export default function ProfilePage() {
+function ProfileContent() {
   const { data: session, update: updateSession } = useSession();
   const router = useRouter();
 
@@ -437,5 +437,17 @@ export default function ProfilePage() {
       </div>
 
     </div>
+  );
+}
+
+export default function ProfilePage() {
+  return (
+    <Suspense fallback={
+      <div className="flex min-h-screen items-center justify-center bg-gray-50">
+        <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+      </div>
+    }>
+      <ProfileContent />
+    </Suspense>
   );
 }

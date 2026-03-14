@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { Suspense, useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
+import { Loader2 } from "lucide-react";
 import Sidebar from "@/components/studio/Sidebar";
 import ScriptWriter from "@/components/studio/ScriptWriter";
 import HookGenerator from "@/components/studio/HookGenerator";
@@ -28,13 +29,12 @@ function getHebrewDate(): string {
   });
 }
 
-export default function StudioPage() {
+function StudioContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const [activeTool, setActiveTool] = useState(searchParams.get("tool") ?? "script");
   const { data: session } = useSession();
 
-  // Sync state when URL ?tool= param changes (e.g. from bottom nav)
   useEffect(() => {
     const tool = searchParams.get("tool") ?? "script";
     setActiveTool(tool);
@@ -64,7 +64,6 @@ export default function StudioPage() {
       />
 
       <div className="flex-1 flex flex-col min-w-0">
-        {/* Top bar */}
         <header className="bg-white border-b border-gray-100 px-4 md:px-6 py-4 flex items-center justify-between sticky top-0 z-10 shadow-sm">
           <div>
             <h1 className="text-base md:text-lg font-bold text-gray-800">{TOOL_TITLES[activeTool]}</h1>
@@ -76,7 +75,6 @@ export default function StudioPage() {
           </div>
         </header>
 
-        {/* Tool content */}
         <main className="flex-1 p-3 md:p-6 max-w-6xl w-full pb-20 md:pb-6 overflow-x-hidden">
           <AnimatePresence mode="wait">
             <motion.div
@@ -91,7 +89,18 @@ export default function StudioPage() {
           </AnimatePresence>
         </main>
       </div>
-
     </div>
+  );
+}
+
+export default function StudioPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex min-h-screen items-center justify-center bg-gray-50">
+        <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+      </div>
+    }>
+      <StudioContent />
+    </Suspense>
   );
 }
