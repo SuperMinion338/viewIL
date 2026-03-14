@@ -5,6 +5,9 @@ import Providers from "@/components/Providers";
 export const metadata: Metadata = {
   title: "ViewIL — כלי AI ליוצרי תוכן ישראלים",
   description: "סקריפטים, לוח תוכן, ניתוח שעות שיא — הכל בעברית, הכל במקום אחד",
+  icons: {
+    icon: "/logo-white.png",
+  },
 };
 
 export default function RootLayout({

@@ -68,10 +68,7 @@ export default function Sidebar({
       {/* Logo */}
       <div className="px-5 py-5 border-b border-white/8">
         <Link href="/" className="flex items-center gap-2 group">
-          <span className="text-xl font-extrabold text-white tracking-tight">
-            ViewIL
-          </span>
-          <span className="w-2 h-2 rounded-full bg-blue-400 shadow-[0_0_8px_rgba(96,165,250,0.8)]" />
+          <img src="/logo-transparent.png" alt="ViewIL" width={32} height={32} className="shrink-0" />
           <ChevronLeft className="w-3 h-3 text-white/20 group-hover:text-white/50 transition mr-auto" />
         </Link>
         <p className="text-white/30 text-xs mt-1 font-medium">סטודיו יוצרים</p>

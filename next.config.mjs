@@ -1,8 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  experimental: {
-    serverComponentsExternalPackages: ["better-sqlite3"],
-  },
+  serverExternalPackages: ["@prisma/client", "@prisma/adapter-neon"],
 };
 
 export default nextConfig;

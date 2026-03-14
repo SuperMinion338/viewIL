@@ -59,6 +59,15 @@ export default function Hero() {
 
       {/* Main content */}
       <div className="relative z-10 text-center px-4 max-w-3xl mx-auto">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="flex justify-center mb-6"
+        >
+          <img src="/logo-transparent.png" alt="ViewIL" width={48} height={48} />
+        </motion.div>
+
         <motion.h1
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
