@@ -1,18 +1,7 @@
 import { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
-import { getDB } from "./db";
-
-interface DBUser {
-  id: number;
-  name: string;
-  email: string;
-  password_hash: string;
-  avatar_url?: string;
-  plan?: string;
-  scripts_this_month?: number;
-  scripts_month_key?: string;
-}
+import { prisma } from "./prisma";
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -25,21 +14,20 @@ export const authOptions: NextAuthOptions = {
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) return null;
 
-        const db = getDB();
-        const user = db
-          .prepare("SELECT * FROM users WHERE email = ?")
-          .get(credentials.email) as DBUser | undefined;
+        const user = await prisma.user.findUnique({
+          where: { email: credentials.email },
+        });
 
         if (!user) return null;
 
-        const valid = await bcrypt.compare(credentials.password, user.password_hash);
+        const valid = await bcrypt.compare(credentials.password, user.password);
         if (!valid) return null;
 
         return {
           id: user.id.toString(),
           name: user.name,
           email: user.email,
-          image: user.avatar_url || null,
+          image: user.avatarUrl || null,
           plan: user.plan || "free",
         };
       },

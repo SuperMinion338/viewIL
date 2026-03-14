@@ -1,30 +1,30 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { getDB } from "@/lib/db";
-
-interface IncomeRow {
-  id: number;
-  user_id: number;
-  type: string;
-  source: string;
-  amount: number;
-  platform: string;
-  date: string;
-  notes: string | null;
-  created_at: string;
-}
+import { prisma } from "@/lib/prisma";
 
 export async function GET() {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) return NextResponse.json({ error: "לא מחובר" }, { status: 401 });
 
-  const db = getDB();
-  const rows = db
-    .prepare("SELECT * FROM income WHERE user_id = ? ORDER BY date DESC, created_at DESC")
-    .all(Number(session.user.id)) as IncomeRow[];
+  const rows = await prisma.income.findMany({
+    where: { userId: Number(session.user.id) },
+    orderBy: [{ date: "desc" }, { createdAt: "desc" }],
+  });
 
-  return NextResponse.json(rows);
+  return NextResponse.json(
+    rows.map((r) => ({
+      id: r.id,
+      user_id: r.userId,
+      type: r.type,
+      source: r.source,
+      amount: r.amount,
+      platform: r.platform,
+      date: r.date,
+      notes: r.notes,
+      created_at: r.createdAt.toISOString(),
+    }))
+  );
 }
 
 export async function POST(req: NextRequest) {
@@ -40,14 +40,19 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "סכום לא תקין" }, { status: 400 });
   }
 
-  const db = getDB();
-  const result = db
-    .prepare(
-      "INSERT INTO income (user_id, type, source, amount, platform, date, notes) VALUES (?, ?, ?, ?, ?, ?, ?)"
-    )
-    .run(Number(session.user.id), type, source.trim(), Number(amount), platform, date, notes?.trim() || null);
+  const record = await prisma.income.create({
+    data: {
+      userId: Number(session.user.id),
+      type,
+      source: source.trim(),
+      amount: Number(amount),
+      platform,
+      date,
+      notes: notes?.trim() || null,
+    },
+  });
 
-  return NextResponse.json({ ok: true, id: result.lastInsertRowid });
+  return NextResponse.json({ ok: true, id: record.id });
 }
 
 export async function DELETE(req: NextRequest) {
@@ -57,7 +62,9 @@ export async function DELETE(req: NextRequest) {
   const { id } = await req.json();
   if (!id) return NextResponse.json({ error: "חסר מזהה" }, { status: 400 });
 
-  const db = getDB();
-  db.prepare("DELETE FROM income WHERE id = ? AND user_id = ?").run(Number(id), Number(session.user.id));
+  await prisma.income.deleteMany({
+    where: { id: Number(id), userId: Number(session.user.id) },
+  });
+
   return NextResponse.json({ ok: true });
 }

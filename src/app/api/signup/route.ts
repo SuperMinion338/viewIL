@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
-import { getDB } from "@/lib/db";
+import { prisma } from "@/lib/prisma";
 
 export async function POST(req: NextRequest) {
   try {
@@ -22,8 +22,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "כתובת אימייל לא תקינה" }, { status: 400 });
     }
 
-    const db = getDB();
-    const existing = db.prepare("SELECT id FROM users WHERE email = ?").get(email.toLowerCase());
+    const existing = await prisma.user.findUnique({
+      where: { email: email.toLowerCase() },
+    });
     if (existing) {
       return NextResponse.json(
         { error: "כתובת האימייל כבר רשומה במערכת" },
@@ -32,11 +33,13 @@ export async function POST(req: NextRequest) {
     }
 
     const hash = await bcrypt.hash(password, 12);
-    db.prepare("INSERT INTO users (name, email, password_hash) VALUES (?, ?, ?)").run(
-      name.trim(),
-      email.toLowerCase(),
-      hash
-    );
+    await prisma.user.create({
+      data: {
+        name: name.trim(),
+        email: email.toLowerCase(),
+        password: hash,
+      },
+    });
 
     return NextResponse.json({ success: true });
   } catch (error) {

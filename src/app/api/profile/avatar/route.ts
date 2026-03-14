@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { getDB } from "@/lib/db";
+import { prisma } from "@/lib/prisma";
 import path from "path";
 import fs from "fs";
 
@@ -32,8 +32,10 @@ export async function POST(req: Request) {
   fs.writeFileSync(path.join(avatarsDir, filename), buffer);
 
   const avatarUrl = `/avatars/${filename}`;
-  const db = getDB();
-  db.prepare("UPDATE users SET avatar_url = ? WHERE id = ?").run(avatarUrl, Number(session.user.id));
+  await prisma.user.update({
+    where: { id: Number(session.user.id) },
+    data: { avatarUrl },
+  });
 
   return NextResponse.json({ ok: true, avatar_url: avatarUrl });
 }

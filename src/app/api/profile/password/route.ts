@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { getDB } from "@/lib/db";
+import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 
 export async function PUT(req: Request) {
@@ -20,18 +20,21 @@ export async function PUT(req: Request) {
     return NextResponse.json({ error: "הסיסמאות אינן תואמות" }, { status: 400 });
   }
 
-  const db = getDB();
-  const user = db
-    .prepare("SELECT password_hash FROM users WHERE id = ?")
-    .get(Number(session.user.id)) as { password_hash: string } | undefined;
+  const user = await prisma.user.findUnique({
+    where: { id: Number(session.user.id) },
+    select: { password: true },
+  });
 
   if (!user) return NextResponse.json({ error: "משתמש לא נמצא" }, { status: 404 });
 
-  const valid = await bcrypt.compare(currentPassword, user.password_hash);
+  const valid = await bcrypt.compare(currentPassword, user.password);
   if (!valid) return NextResponse.json({ error: "הסיסמה הנוכחית שגויה" }, { status: 400 });
 
   const newHash = await bcrypt.hash(newPassword, 12);
-  db.prepare("UPDATE users SET password_hash = ? WHERE id = ?").run(newHash, Number(session.user.id));
+  await prisma.user.update({
+    where: { id: Number(session.user.id) },
+    data: { password: newHash },
+  });
 
   return NextResponse.json({ ok: true });
 }

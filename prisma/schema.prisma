@@ -1,0 +1,72 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id               Int             @id @default(autoincrement())
+  name             String
+  email            String          @unique
+  password         String
+  plan             String          @default("free")
+  avatarUrl        String?
+  instagramUrl     String?
+  tiktokUrl        String?
+  scriptsThisMonth Int             @default(0)
+  scriptsMonthKey  String?
+  createdAt        DateTime        @default(now())
+  scripts          SavedScript[]
+  hooks            SavedHook[]
+  income           Income[]
+  calendarEvents   CalendarEvent[]
+}
+
+model Income {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  type      String
+  source    String
+  amount    Float
+  platform  String
+  date      String
+  notes     String?
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model SavedScript {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  idea      String
+  tone      String?
+  hook      String?
+  body      String?
+  cta       String?
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model SavedHook {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  topic     String
+  platform  String?
+  hooks     String
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model CalendarEvent {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  date      String
+  title     String
+  platform  String?
+  notes     String?
+  color     String?
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}

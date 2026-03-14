@@ -1,8 +1,7 @@
 import { NextResponse } from "next/server";
-import { getDB } from "@/lib/db";
+import { prisma } from "@/lib/prisma";
 
 export async function GET() {
-  const db = getDB();
-  const row = db.prepare("SELECT COUNT(*) as count FROM users").get() as { count: number };
-  return NextResponse.json({ count: row.count });
+  const count = await prisma.user.count();
+  return NextResponse.json({ count });
 }
