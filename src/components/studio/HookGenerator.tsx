@@ -49,7 +49,7 @@ export default function HookGenerator() {
   return (
     <div className="flex flex-col gap-6" dir="rtl">
       <div>
-        <h2 className="text-xl font-bold text-gray-800 mb-1">מחולל פתיחות</h2>
+        <h2 className="text-xl font-bold text-gray-800 mb-1">יוצר הוקים</h2>
         <p className="text-sm text-gray-500">קבל 5 פתיחות מנצחות לכל סרטון</p>
       </div>
 

@@ -28,6 +28,11 @@ const features = [
     title: "ניתוח ביצועים",
     description: "מה עבד, מה לא — בעברית",
   },
+  {
+    icon: "₪",
+    title: "ניהול הכנסות",
+    description: "עקוב אחרי הכנסות מספונסרים, אפיליאציה ולייבים — עם גרפים וסיכומים חודשיים",
+  },
 ];
 
 const containerVariants = {
@@ -69,9 +74,7 @@ export default function Features() {
             <motion.div
               key={index}
               variants={cardVariants}
-              className={`bg-white border border-gray-100 rounded-2xl p-6 hover:shadow-lg hover:scale-105 transition-all cursor-default ${
-                index === 4 ? "md:col-span-2 md:max-w-sm md:mx-auto w-full" : ""
-              }`}
+              className="bg-white border border-gray-100 rounded-2xl p-6 hover:shadow-lg hover:scale-105 transition-all cursor-default"
             >
               <div className="text-4xl mb-4">{feature.icon}</div>
               <h3 className="text-xl font-bold text-gray-900 mb-2">{feature.title}</h3>

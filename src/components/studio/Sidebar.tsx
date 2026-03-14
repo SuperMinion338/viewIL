@@ -18,7 +18,7 @@ import {
 
 const tools = [
   { id: "script", icon: FileText, label: "כותב סקריפטים" },
-  { id: "hooks", icon: Zap, label: "מחולל פתיחות" },
+  { id: "hooks", icon: Zap, label: "יוצר הוקים" },
   { id: "calendar", icon: Calendar, label: "לוח תוכן" },
   { id: "time", icon: Clock, label: "שעות שיא" },
   { id: "performance", icon: BarChart2, label: "ניתוח ביצועים" },
@@ -69,9 +69,12 @@ export default function Sidebar({
       <div className="px-5 py-5 border-b border-white/8">
         <Link href="/" className="flex items-center gap-2 group">
           <Image src="/logo-transparent.png" alt="ViewIL" width={32} height={32} className="shrink-0" />
+          <div className="flex flex-col leading-tight">
+            <span className="text-white text-sm font-bold tracking-wide">ViewIL Studio</span>
+            <span className="text-white/50 text-[11px] font-medium">סטודיו יוצרים</span>
+          </div>
           <ChevronLeft className="w-3 h-3 text-white/20 group-hover:text-white/50 transition mr-auto" />
         </Link>
-        <p className="text-white/70 text-xs mt-1 font-semibold tracking-wide">סטודיו יוצרים</p>
       </div>
 
       {/* Nav */}

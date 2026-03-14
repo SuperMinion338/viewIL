@@ -14,7 +14,7 @@ import PerformanceAnalyzer from "@/components/studio/PerformanceAnalyzer";
 
 const TOOL_TITLES: Record<string, string> = {
   script: "כותב סקריפטים",
-  hooks: "מחולל פתיחות",
+  hooks: "יוצר הוקים",
   calendar: "לוח תוכן",
   time: "ניתוח שעות שיא",
   performance: "ניתוח ביצועים",

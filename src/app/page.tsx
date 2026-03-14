@@ -1,3 +1,5 @@
+export const revalidate = 0;
+
 import Hero from "@/components/landing/Hero";
 import SocialProof from "@/components/landing/SocialProof";
 import Features from "@/components/landing/Features";

@@ -48,7 +48,7 @@ export default function SocialProof() {
   const [userCount, setUserCount] = useState(0);
 
   useEffect(() => {
-    fetch("/api/user-count")
+    fetch("/api/user-count", { cache: "no-store" })
       .then((res) => res.json())
       .then((data) => {
         if (typeof data.count === "number") setUserCount(data.count);
