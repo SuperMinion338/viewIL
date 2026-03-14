@@ -7,21 +7,38 @@ datasource db {
 }
 
 model User {
-  id               Int             @id @default(autoincrement())
+  id               Int                   @id @default(autoincrement())
   name             String
-  email            String          @unique
+  email            String                @unique
   password         String
-  plan             String          @default("free")
+  plan             String                @default("free")
   avatarUrl        String?
   instagramUrl     String?
   tiktokUrl        String?
-  scriptsThisMonth Int             @default(0)
+  scriptsThisMonth Int                   @default(0)
   scriptsMonthKey  String?
-  createdAt        DateTime        @default(now())
+  createdAt        DateTime              @default(now())
   scripts          SavedScript[]
   hooks            SavedHook[]
   income           Income[]
   calendarEvents   CalendarEvent[]
+  analyses         PerformanceAnalysis[]
+}
+
+model PerformanceAnalysis {
+  id           Int      @id @default(autoincrement())
+  userId       Int
+  title        String
+  platform     String
+  views        Int      @default(0)
+  likes        Int      @default(0)
+  comments     Int      @default(0)
+  shares       Int      @default(0)
+  saves        Int      @default(0)
+  reach        Int      @default(0)
+  groqAnalysis String
+  createdAt    DateTime @default(now())
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Income {

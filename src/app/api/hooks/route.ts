@@ -1,5 +1,6 @@
 import Groq from "groq-sdk";
 import { NextRequest, NextResponse } from "next/server";
+import { containsBlockedWords } from "@/lib/contentFilter";
 
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
@@ -9,6 +10,13 @@ export async function POST(req: NextRequest) {
 
     if (!topic) {
       return NextResponse.json({ error: "חסר נושא לסרטון" }, { status: 400 });
+    }
+
+    if (containsBlockedWords(topic)) {
+      return NextResponse.json(
+        { error: "הטקסט מכיל מילים לא מתאימות. אנא נסח מחדש." },
+        { status: 400 }
+      );
     }
 
     const platformMap: Record<string, string> = {
@@ -78,6 +86,14 @@ export async function POST(req: NextRequest) {
         text: match?.[1]?.trim() || "",
       };
     });
+
+    const allHookText = hooks.map((h) => h.text).join(" ");
+    if (containsBlockedWords(allHookText)) {
+      return NextResponse.json(
+        { error: "התוצאה לא עמדה בסטנדרטים שלנו. נסה שוב." },
+        { status: 400 }
+      );
+    }
 
     return NextResponse.json({ hooks });
   } catch (error: unknown) {

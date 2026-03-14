@@ -1,5 +1,6 @@
 import Groq from "groq-sdk";
 import { NextRequest, NextResponse } from "next/server";
+import { containsBlockedWords } from "@/lib/contentFilter";
 
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
@@ -70,6 +71,13 @@ export async function POST(req: NextRequest) {
         ?.split("\n")
         .map((l) => l.replace(/^-\s*/, "").trim())
         .filter(Boolean) || [];
+
+    if (containsBlockedWords(text)) {
+      return NextResponse.json(
+        { error: "התוצאה לא עמדה בסטנדרטים שלנו. נסה שוב." },
+        { status: 400 }
+      );
+    }
 
     return NextResponse.json({
       score,

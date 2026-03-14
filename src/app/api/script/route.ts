@@ -1,5 +1,6 @@
 import Groq from "groq-sdk";
 import { NextRequest, NextResponse } from "next/server";
+import { containsBlockedWords } from "@/lib/contentFilter";
 
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
@@ -9,6 +10,13 @@ export async function POST(req: NextRequest) {
 
     if (!idea) {
       return NextResponse.json({ error: "חסר רעיון לסרטון" }, { status: 400 });
+    }
+
+    if (containsBlockedWords(idea)) {
+      return NextResponse.json(
+        { error: "הטקסט מכיל מילים לא מתאימות. אנא נסח מחדש." },
+        { status: 400 }
+      );
     }
 
     const toneMap: Record<string, string> = {
@@ -56,6 +64,13 @@ export async function POST(req: NextRequest) {
     const hookMatch = text.match(/פתיחה[^:]*:([\s\S]*?)(?=גוף הסרטון|$)/i);
     const bodyMatch = text.match(/גוף הסרטון[^:]*:([\s\S]*?)(?=סיום|$)/i);
     const ctaMatch = text.match(/סיום[^:]*:([\s\S]*?)$/i);
+
+    if (containsBlockedWords(text)) {
+      return NextResponse.json(
+        { error: "התוצאה לא עמדה בסטנדרטים שלנו. נסה שוב." },
+        { status: 400 }
+      );
+    }
 
     return NextResponse.json({
       hook: hookMatch?.[1]?.trim() || "",

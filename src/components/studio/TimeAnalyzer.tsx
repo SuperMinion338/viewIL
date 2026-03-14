@@ -5,42 +5,116 @@ import { useState } from "react";
 const DAYS = ["ראשון", "שני", "שלישי", "רביעי", "חמישי", "שישי", "שבת"];
 const HOURS = [6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23];
 
-// Heat levels 0-7 for each platform
-// Format: [Sun, Mon, Tue, Wed, Thu, Fri, Sat][hourIndex]
+// Heat levels 0-7 — Israeli audience 2026 data (UTC+2/+3)
+// dayIndex: 0=Sun, 1=Mon, 2=Tue, 3=Wed, 4=Thu, 5=Fri, 6=Sat
 function getHeatLevel(platform: string, dayIndex: number, hourIndex: number): number {
   const hour = HOURS[hourIndex];
-  const isFriday = dayIndex === 5;
-  const isSaturday = dayIndex === 6;
-  const isWeekday = dayIndex <= 4;
+  const isSunday    = dayIndex === 0;
+  const isMonday    = dayIndex === 1;
+  const isTueWedThu = dayIndex >= 2 && dayIndex <= 4;
+  const isThursday  = dayIndex === 4;
+  const isFriday    = dayIndex === 5;
+  const isSaturday  = dayIndex === 6;
+  const isMonToThu  = dayIndex >= 1 && dayIndex <= 4;
 
-  if (isSaturday) return 0; // Shabbat
-  if (isFriday && hour >= 14) return 1; // Friday afternoon - avoid
+  // Saturday: Shabbat — block all
+  // Exception: YouTube Saturday night (after ~20:00, Shabbat ends)
+  if (isSaturday) {
+    if (platform === "youtube" && hour >= 20) return 5;
+    return 0;
+  }
 
+  // Friday 14:00–20:00: Shabbat prep — avoid all platforms
+  if (isFriday && hour >= 14 && hour < 20) return 1;
+
+  // ── INSTAGRAM ──
+  // Best days: Tue, Wed, Thu | Morning: 09–11 | Lunch: 13–14 | Evening: 19–21
+  // Avoid: Sunday before 10:00
   if (platform === "instagram") {
-    if (isWeekday && hour >= 19 && hour <= 22) return 7;
-    if (isWeekday && hour >= 12 && hour <= 14) return 5;
-    if (isWeekday && hour >= 7 && hour <= 9) return 4;
-    if (isFriday && hour >= 8 && hour <= 12) return 4;
-    if (isWeekday && hour >= 17 && hour <= 18) return 5;
-    if (hour < 6 || hour > 23) return 0;
+    if (isSunday && hour < 10) return 1;
+
+    // Evening peak 19:00–21:00
+    if (hour >= 19 && hour <= 21) {
+      if (isTueWedThu) return 7;
+      if (isFriday) return 2; // Friday evening (Shabbat has started)
+      return 5; // Mon, Sun
+    }
+    // Lunch peak 13:00–14:00
+    if (hour >= 13 && hour <= 14) {
+      if (isTueWedThu) return 6;
+      return 4;
+    }
+    // Morning peak 09:00–11:00
+    if (hour >= 9 && hour <= 11) {
+      if (isTueWedThu) return 5;
+      if (isFriday) return 4;
+      return 3;
+    }
+    // Friday morning 8:00–13:00
+    if (isFriday && hour >= 8 && hour < 14) return 3;
+    if (hour < 8) return 1;
     return 2;
   }
 
+  // ── TIKTOK ──
+  // Best: Mon–Thu + weekends | Morning: 07–09 | Evening: 19–23 (strongest)
+  // Thu & Fri evenings: absolute peak | Weekend afternoon: 14–17
+  // Avoid: Friday 14:00–20:00 (Shabbat prep) — already handled above
   if (platform === "tiktok") {
-    if (isWeekday && hour >= 21 && hour <= 23) return 7;
-    if (isWeekday && hour >= 19 && hour <= 21) return 6;
-    if (isWeekday && hour >= 14 && hour <= 16) return 4;
-    if (isFriday && hour >= 10 && hour <= 13) return 4;
-    if (hour < 10) return 1;
+    if (isFriday) {
+      if (hour >= 20) return 7;           // Post-Shabbat: absolute peak
+      if (hour >= 7 && hour <= 9) return 6;  // Friday morning peak
+      if (hour >= 10 && hour < 14) return 5; // Friday midday (before Shabbat prep)
+      return 1;
+    }
+
+    // Evening peak 19:00–23:00 (strongest window)
+    if (hour >= 19 && hour <= 23) {
+      if (isThursday || isMonday) return 7; // Absolute peak on Thu & Mon
+      if (isMonToThu) return 7;
+      if (isSunday) return 6;
+      return 5;
+    }
+    // Morning peak 07:00–09:00
+    if (hour >= 7 && hour <= 9) {
+      if (isMonToThu) return 6;
+      if (isSunday) return 5;
+      return 3;
+    }
+    // Afternoon 14:00–17:00 (strong on non-Fri days)
+    if (hour >= 14 && hour <= 17) return 4;
+    if (hour < 7) return 2;
     return 3;
   }
 
+  // ── YOUTUBE ──
+  // Best: Thu, Fri morning, Sat night, Sun | Upload: 12–16 | Evening: 19–22
+  // Weekend mornings 09–11 strong | Avoid: weekday (Mon–Thu) before 10:00
   if (platform === "youtube") {
-    if (isWeekday && hour >= 19 && hour <= 22) return 7;
-    if (isWeekday && hour >= 15 && hour <= 18) return 5;
-    if (isWeekday && hour === 12 || hour === 13) return 4;
-    if (isFriday && hour >= 9 && hour <= 13) return 5;
-    if (hour < 8) return 0;
+    // Mon–Thu: avoid mornings before 10:00
+    if (isMonToThu && !isThursday && hour < 10) return 1;
+    if (isThursday && hour < 10) return 1;
+
+    if (isFriday) {
+      if (hour >= 9 && hour <= 11) return 5;  // Friday morning: strong
+      if (hour >= 12 && hour < 14) return 6;  // Upload window before Shabbat prep
+      if (hour >= 20) return 4;               // Friday night (after Shabbat)
+      return 2;
+    }
+
+    // Evening viewing peak 19:00–22:00
+    if (hour >= 19 && hour <= 22) {
+      if (isThursday || isSunday) return 7;
+      return 5;
+    }
+    // Upload window 12:00–16:00 (indexes before evening peak)
+    if (hour >= 12 && hour <= 16) {
+      if (isThursday || isSunday) return 6;
+      return 4;
+    }
+    // Weekend mornings 09:00–11:00 strong
+    if ((isSunday || isThursday) && hour >= 9 && hour <= 11) return 5;
+
     return 2;
   }
 
@@ -48,7 +122,8 @@ function getHeatLevel(platform: string, dayIndex: number, hourIndex: number): nu
 }
 
 function getTooltip(level: number): string {
-  if (level === 0) return "לא מומלץ לפרסם";
+  if (level === 0) return "שבת — לא מומלץ לפרסם";
+  if (level === 1) return "פעילות נמוכה — הימנע";
   if (level <= 2) return "פעילות נמוכה";
   if (level <= 4) return "שעה בינונית";
   if (level <= 6) return "שעה טובה לפרסם";
@@ -59,11 +134,31 @@ export default function TimeAnalyzer() {
   const [platform, setPlatform] = useState("instagram");
   const [tooltip, setTooltip] = useState<{ text: string; x: number; y: number } | null>(null);
 
+  const tips = {
+    instagram: {
+      good: "ג׳–ה׳ 19:00–21:00 | ג׳–ה׳ 09:00–11:00",
+      medium: "שישי בוקר 09:00–13:00 | 13:00–14:00 כל ימות השבוע",
+      avoid: "שבת כולה | שישי 14:00+ | ראשון לפני 10:00",
+    },
+    tiktok: {
+      good: "ב׳–ה׳ 19:00–23:00 | שישי 20:00–23:00 (אחרי שבת)",
+      medium: "שישי 07:00–13:00 | 14:00–17:00 ימות השבוע",
+      avoid: "שבת כולה | שישי 14:00–20:00 (הכנות לשבת)",
+    },
+    youtube: {
+      good: "ה׳ + ראשון 19:00–22:00 | העלאה 12:00–16:00",
+      medium: "שישי 09:00–13:00 | שבת מוצ״ש 20:00+",
+      avoid: "ב׳–ה׳ לפני 10:00 | שישי 14:00–20:00",
+    },
+  };
+
+  const t = tips[platform as keyof typeof tips] || tips.instagram;
+
   return (
     <div className="flex flex-col gap-4" dir="rtl">
       <div>
         <h2 className="text-xl font-bold text-gray-800 mb-1">ניתוח שעות שיא</h2>
-        <p className="text-sm text-gray-500">מתי הקהל הישראלי הכי פעיל?</p>
+        <p className="text-sm text-gray-500">מתי הקהל הישראלי הכי פעיל? (נתוני 2026)</p>
       </div>
 
       {/* Platform tabs */}
@@ -142,29 +237,15 @@ export default function TimeAnalyzer() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
         <div className="bg-green-50 border border-green-200 rounded-2xl p-4">
           <h4 className="font-bold text-green-700 text-sm mb-2">✅ שעות מומלצות</h4>
-          <p className="text-xs text-green-600">
-            {platform === "tiktok"
-              ? "21:00–23:00 ימים א׳–ה׳"
-              : platform === "youtube"
-              ? "19:00–22:00 ימים א׳–ה׳"
-              : "19:00–22:00 ימים א׳–ה׳"}
-          </p>
+          <p className="text-xs text-green-600">{t.good}</p>
         </div>
         <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4">
           <h4 className="font-bold text-amber-700 text-sm mb-2">⚠️ שעות בינוניות</h4>
-          <p className="text-xs text-amber-600">
-            {platform === "tiktok"
-              ? "14:00–16:00, בוקר שישי"
-              : platform === "youtube"
-              ? "15:00–18:00, שישי בוקר"
-              : "שישי 8:00–12:00"}
-          </p>
+          <p className="text-xs text-amber-600">{t.medium}</p>
         </div>
         <div className="bg-red-50 border border-red-200 rounded-2xl p-4">
           <h4 className="font-bold text-red-700 text-sm mb-2">🚫 הימנע</h4>
-          <p className="text-xs text-red-600">
-            שבת כולה, שישי אחר הצהריים, לילה מאוחר
-          </p>
+          <p className="text-xs text-red-600">{t.avoid}</p>
         </div>
       </div>
 

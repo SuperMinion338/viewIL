@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
-import { Loader2, Link as LinkIcon, ClipboardList } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { Loader2, Link as LinkIcon, ClipboardList, Trash2, ChevronDown, ChevronUp, Download } from "lucide-react";
+import { containsBlockedWords } from "@/lib/contentFilter";
 
 interface Result {
   score: number;
@@ -20,6 +21,20 @@ interface Stats {
   reach: string;
 }
 
+interface SavedAnalysis {
+  id: number;
+  title: string;
+  platform: string;
+  views: number;
+  likes: number;
+  comments: number;
+  shares: number;
+  saves: number;
+  reach: number;
+  groqAnalysis: string;
+  createdAt: string;
+}
+
 const EMPTY_STATS: Stats = {
   views: "", likes: "", comments: "", shares: "", saves: "", reach: "",
 };
@@ -33,17 +48,99 @@ const fields = [
   { key: "reach" as const, label: "📡 טווח הגעה" },
 ];
 
+const PLATFORM_ICONS: Record<string, string> = {
+  instagram: "📸",
+  tiktok: "🎵",
+  youtube: "▶️",
+  facebook: "👥",
+};
+
+const PLATFORM_LABELS: Record<string, string> = {
+  instagram: "אינסטגרם",
+  tiktok: "TikTok",
+  youtube: "יוטיוב",
+  facebook: "פייסבוק",
+};
+
 export default function PerformanceAnalyzer() {
   const [tab, setTab] = useState<"manual" | "url">("manual");
   const [platform, setPlatform] = useState("instagram");
+  const [title, setTitle] = useState("");
   const [stats, setStats] = useState<Stats>(EMPTY_STATS);
   const [url, setUrl] = useState("");
   const [urlStatsReady, setUrlStatsReady] = useState(false);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<Result | null>(null);
   const [error, setError] = useState("");
+  const [exporting, setExporting] = useState(false);
+
+  const [analyses, setAnalyses] = useState<SavedAnalysis[]>([]);
+  const [loadingAnalyses, setLoadingAnalyses] = useState(true);
+  const [expandedId, setExpandedId] = useState<number | null>(null);
+
+  const resultRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    loadAnalyses();
+  }, []);
+
+  const loadAnalyses = async () => {
+    setLoadingAnalyses(true);
+    try {
+      const res = await fetch("/api/analyses");
+      if (res.ok) {
+        const data = await res.json();
+        setAnalyses(data.analyses || []);
+      }
+    } catch {
+      // silent
+    } finally {
+      setLoadingAnalyses(false);
+    }
+  };
+
+  const saveAnalysis = async (r: Result) => {
+    try {
+      await fetch("/api/analyses", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title,
+          platform,
+          views: Number(stats.views) || 0,
+          likes: Number(stats.likes) || 0,
+          comments: Number(stats.comments) || 0,
+          shares: Number(stats.shares) || 0,
+          saves: Number(stats.saves) || 0,
+          reach: Number(stats.reach) || 0,
+          groqAnalysis: JSON.stringify(r),
+        }),
+      });
+      await loadAnalyses();
+    } catch {
+      // silent
+    }
+  };
+
+  const handleDelete = async (id: number) => {
+    try {
+      await fetch(`/api/analyses/${id}`, { method: "DELETE" });
+      setAnalyses((prev) => prev.filter((a) => a.id !== id));
+      if (expandedId === id) setExpandedId(null);
+    } catch {
+      // silent
+    }
+  };
 
   const handleAnalyze = async () => {
+    if (!title.trim()) {
+      setError("אנא הכנס שם לסרטון / הפוסט");
+      return;
+    }
+    if (containsBlockedWords(title)) {
+      setError("הטקסט מכיל מילים לא מתאימות. אנא נסח מחדש.");
+      return;
+    }
     setLoading(true);
     setError("");
     setResult(null);
@@ -64,6 +161,7 @@ export default function PerformanceAnalyzer() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
       setResult(data);
+      saveAnalysis(data);
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : "שגיאה בניתוח");
     } finally {
@@ -73,22 +171,124 @@ export default function PerformanceAnalyzer() {
 
   const handleUrlContinue = () => {
     if (!url.trim()) return;
-    // Auto-detect platform from URL
     if (url.includes("tiktok.com")) setPlatform("tiktok");
     else if (url.includes("instagram.com")) setPlatform("instagram");
     setUrlStatsReady(true);
   };
 
+  const handleExport = async () => {
+    if (!resultRef.current || !result) return;
+    setExporting(true);
+    try {
+      const { default: html2canvas } = await import("html2canvas");
+
+      const captured = await html2canvas(resultRef.current, {
+        backgroundColor: "#ffffff",
+        scale: 2,
+        useCORS: true,
+        logging: false,
+      });
+
+      const finalCanvas = document.createElement("canvas");
+      finalCanvas.width = 1080;
+      finalCanvas.height = 1080;
+      const ctx = finalCanvas.getContext("2d")!;
+
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(0, 0, 1080, 1080);
+
+      const paddingH = 60;
+      const paddingTop = 50;
+      const brandingH = 70;
+      const contentAreaW = 1080 - paddingH * 2;
+      const contentAreaH = 1080 - paddingTop - brandingH;
+
+      const scaleX = contentAreaW / captured.width;
+      const scaleY = contentAreaH / captured.height;
+      const drawScale = Math.min(scaleX, scaleY);
+
+      const drawW = captured.width * drawScale;
+      const drawH = captured.height * drawScale;
+      const drawX = (1080 - drawW) / 2;
+      const drawY = paddingTop + (contentAreaH - drawH) / 2;
+
+      ctx.drawImage(captured, drawX, drawY, drawW, drawH);
+
+      // Draw branding (favicon + text) at bottom right
+      const faviconSize = 40;
+      const faviconX = 1080 - 24 - faviconSize;
+      const faviconY = 1080 - 24 - faviconSize;
+
+      const img = new Image();
+      img.src = "/favicon.ico";
+      await new Promise<void>((resolve) => {
+        img.onload = () => resolve();
+        img.onerror = () => resolve();
+        setTimeout(resolve, 1500);
+      });
+
+      if (img.naturalWidth > 0) {
+        ctx.drawImage(img, faviconX, faviconY, faviconSize, faviconSize);
+      }
+
+      ctx.fillStyle = "#9ca3af";
+      ctx.font = "14px Arial, sans-serif";
+      ctx.textAlign = "right";
+      ctx.textBaseline = "middle";
+      ctx.fillText("viewil.com", faviconX - 10, faviconY + faviconSize / 2);
+
+      const dateStr = new Date().toISOString().split("T")[0];
+      const safeTitle = title.replace(/[\s/\\:*?"<>|]/g, "-").slice(0, 40);
+      const filename = `viewil-analysis-${safeTitle}-${dateStr}.png`;
+
+      const link = document.createElement("a");
+      link.download = filename;
+      link.href = finalCanvas.toDataURL("image/png", 1.0);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (err) {
+      console.error("Export error:", err);
+    } finally {
+      setExporting(false);
+    }
+  };
+
   const scoreColor = (s: number) =>
     s >= 8 ? "text-green-600" : s >= 5 ? "text-amber-600" : "text-red-600";
   const scoreBg = (s: number) =>
-    s >= 8 ? "bg-green-50 border-green-200" : s >= 5 ? "bg-amber-50 border-amber-200" : "bg-red-50 border-red-200";
+    s >= 8
+      ? "bg-green-50 border-green-200"
+      : s >= 5
+      ? "bg-amber-50 border-amber-200"
+      : "bg-red-50 border-red-200";
+
+  const formatDate = (dateStr: string) =>
+    new Date(dateStr).toLocaleDateString("he-IL", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
 
   return (
     <div className="flex flex-col gap-6" dir="rtl">
       <div>
         <h2 className="text-xl font-bold text-gray-800 mb-1">ניתוח ביצועים</h2>
         <p className="text-sm text-gray-500">הכנס נתונים ידנית או קישור לפוסט</p>
+      </div>
+
+      {/* Title field */}
+      <div className="bg-white border border-gray-200 rounded-2xl p-4">
+        <label className="block text-sm font-semibold text-gray-700 mb-2">
+          שם הסרטון / הפוסט <span className="text-red-500">*</span>
+        </label>
+        <input
+          type="text"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          placeholder="לדוגמה: ריל על 5 טיפים לעסקים קטנים"
+          className="w-full border border-gray-200 rounded-xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+        />
       </div>
 
       {/* Tab switcher */}
@@ -148,10 +348,9 @@ export default function PerformanceAnalyzer() {
         </div>
       )}
 
-      {/* Manual entry — shown for manual tab OR after URL is entered */}
+      {/* Manual entry */}
       {(tab === "manual" || urlStatsReady) && (
         <div className="bg-white border border-gray-200 rounded-2xl p-6 flex flex-col gap-5">
-          {/* URL reference banner */}
           {urlStatsReady && url && (
             <div className="flex items-center gap-3 bg-blue-50 border border-blue-200 rounded-xl px-4 py-2.5">
               <LinkIcon className="w-4 h-4 text-blue-500 shrink-0" />
@@ -161,14 +360,12 @@ export default function PerformanceAnalyzer() {
               </div>
             </div>
           )}
-
           {urlStatsReady && (
             <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 text-sm text-amber-800">
               אינסטגרם וטיקטוק לא מאפשרים קריאה אוטומטית — הכנס את הנתונים מהפוסט
             </div>
           )}
 
-          {/* Platform */}
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-2">פלטפורמה</label>
             <div className="flex gap-2 flex-wrap">
@@ -193,7 +390,6 @@ export default function PerformanceAnalyzer() {
             </div>
           </div>
 
-          {/* Stats grid */}
           <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
             {fields.map(({ key, label }) => (
               <div key={key}>
@@ -235,14 +431,18 @@ export default function PerformanceAnalyzer() {
 
       {/* Results */}
       {result && (
-        <div className="flex flex-col gap-4">
+        <div ref={resultRef} className="flex flex-col gap-4">
           <div className={`border rounded-2xl p-6 text-center ${scoreBg(result.score)}`}>
-            <p className="text-sm font-semibold text-gray-600 mb-1">ציון הסרטון</p>
+            <p className="text-sm font-semibold text-gray-600 mb-1">
+              ציון הסרטון — {title}
+            </p>
             <p className={`text-6xl font-extrabold ${scoreColor(result.score)}`}>
               {result.score}
               <span className="text-2xl text-gray-400">/10</span>
             </p>
-            <p className="text-sm text-gray-500 mt-2">אחוז מעורבות: {result.engagementRate}%</p>
+            <p className="text-sm text-gray-500 mt-2">
+              {PLATFORM_ICONS[platform]} {PLATFORM_LABELS[platform] || platform} • אחוז מעורבות: {result.engagementRate}%
+            </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -281,6 +481,25 @@ export default function PerformanceAnalyzer() {
             </h4>
             <p className="text-blue-800 text-sm leading-relaxed">{result.nextTopic}</p>
           </div>
+
+          {/* Export button */}
+          <button
+            onClick={handleExport}
+            disabled={exporting}
+            className="flex items-center justify-center gap-2 w-full border-2 border-gray-200 text-gray-600 hover:bg-gray-50 font-semibold py-3 rounded-2xl transition"
+          >
+            {exporting ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                מייצא תמונה...
+              </>
+            ) : (
+              <>
+                <Download className="w-4 h-4" />
+                הורד כתמונה
+              </>
+            )}
+          </button>
         </div>
       )}
 
@@ -292,6 +511,121 @@ export default function PerformanceAnalyzer() {
           </div>
         </div>
       )}
+
+      {/* ── Saved Analyses ── */}
+      <div className="flex flex-col gap-4 pt-2">
+        <div className="flex items-center gap-2">
+          <h3 className="text-lg font-bold text-gray-800">הניתוחים השמורים שלי</h3>
+          {analyses.length > 0 && (
+            <span className="bg-blue-100 text-blue-700 text-xs font-bold px-2.5 py-1 rounded-full">
+              {analyses.length}
+            </span>
+          )}
+        </div>
+
+        {loadingAnalyses ? (
+          <div className="flex items-center gap-3 text-gray-400 py-6">
+            <Loader2 className="w-5 h-5 animate-spin text-blue-500" />
+            <span className="text-sm">טוען ניתוחים...</span>
+          </div>
+        ) : analyses.length === 0 ? (
+          <div className="border-2 border-dashed border-gray-200 rounded-2xl flex items-center justify-center py-12 text-gray-400">
+            <div className="text-center">
+              <div className="text-3xl mb-2">📋</div>
+              <p className="text-sm font-medium">אין ניתוחים שמורים עדיין</p>
+            </div>
+          </div>
+        ) : (
+          <div className="flex flex-col gap-3">
+            {analyses.map((analysis) => {
+              const parsed: Result | null = (() => {
+                try { return JSON.parse(analysis.groqAnalysis); } catch { return null; }
+              })();
+              const isExpanded = expandedId === analysis.id;
+
+              return (
+                <div
+                  key={analysis.id}
+                  className="bg-white border border-gray-200 rounded-2xl overflow-hidden"
+                >
+                  {/* Card header */}
+                  <div className="flex items-center gap-3 p-4">
+                    <span className="text-2xl shrink-0">
+                      {PLATFORM_ICONS[analysis.platform] || "📊"}
+                    </span>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-gray-800 truncate">{analysis.title}</p>
+                      <p className="text-xs text-gray-400 mt-0.5">
+                        {PLATFORM_LABELS[analysis.platform] || analysis.platform} • {formatDate(analysis.createdAt)}
+                      </p>
+                    </div>
+                    {parsed && (
+                      <div
+                        className={`shrink-0 text-center px-3 py-1.5 rounded-full text-sm font-bold border ${
+                          parsed.score >= 8
+                            ? "bg-green-50 border-green-200 text-green-700"
+                            : parsed.score >= 5
+                            ? "bg-amber-50 border-amber-200 text-amber-700"
+                            : "bg-red-50 border-red-200 text-red-700"
+                        }`}
+                      >
+                        {parsed.score}/10
+                      </div>
+                    )}
+                    <button
+                      onClick={() => setExpandedId(isExpanded ? null : analysis.id)}
+                      className="shrink-0 p-1.5 rounded-lg hover:bg-gray-100 text-gray-500 transition"
+                      title={isExpanded ? "סגור" : "הרחב"}
+                    >
+                      {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                    </button>
+                    <button
+                      onClick={() => handleDelete(analysis.id)}
+                      className="shrink-0 p-1.5 rounded-lg hover:bg-red-50 text-gray-400 hover:text-red-500 transition"
+                      title="מחק"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+
+                  {/* Expanded content */}
+                  {isExpanded && parsed && (
+                    <div className="border-t border-gray-100 p-4 flex flex-col gap-3 bg-gray-50">
+                      <p className="text-xs text-gray-500 font-medium">
+                        אחוז מעורבות: {parsed.engagementRate}%
+                      </p>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <div className="bg-green-50 border border-green-200 rounded-xl p-3">
+                          <p className="text-xs font-bold text-green-700 mb-1.5">✅ מה עבד טוב</p>
+                          <ul className="flex flex-col gap-1">
+                            {parsed.workedWell?.map((item, i) => (
+                              <li key={i} className="text-xs text-green-700">• {item}</li>
+                            ))}
+                          </ul>
+                        </div>
+                        <div className="bg-amber-50 border border-amber-200 rounded-xl p-3">
+                          <p className="text-xs font-bold text-amber-700 mb-1.5">⚡ מה לשפר</p>
+                          <ul className="flex flex-col gap-1">
+                            {parsed.improve?.map((item, i) => (
+                              <li key={i} className="text-xs text-amber-700">• {item}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      </div>
+                      {parsed.nextTopic && (
+                        <div className="bg-blue-50 border border-blue-200 rounded-xl p-3">
+                          <p className="text-xs font-bold text-blue-700 mb-1">🎯 נושא לסרטון הבא</p>
+                          <p className="text-xs text-blue-800">{parsed.nextTopic}</p>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
