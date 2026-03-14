@@ -19,18 +19,27 @@ export default function LoginPage() {
     setLoading(true);
     setError("");
 
-    const res = await signIn("credentials", {
-      email: email.toLowerCase(),
-      password,
-      redirect: false,
-    });
+    try {
+      const res = await signIn("credentials", {
+        email: email.toLowerCase(),
+        password,
+        redirect: false,
+      });
 
-    setLoading(false);
-
-    if (res?.error) {
-      setError("אימייל או סיסמה שגויים");
-    } else {
-      router.push("/home");
+      if (!res) {
+        console.error("[login] signIn returned null/undefined");
+        setError("שגיאת שרת — נסה שוב");
+      } else if (res.error) {
+        console.error("[login] signIn error:", res.error, "status:", res.status);
+        setError("אימייל או סיסמה שגויים");
+      } else {
+        router.push("/home");
+      }
+    } catch (err) {
+      console.error("[login] unexpected error:", err);
+      setError("שגיאה בלתי צפויה — נסה שוב");
+    } finally {
+      setLoading(false);
     }
   };
 
