@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { ArrowRight } from "lucide-react";
 
 export const metadata = {
@@ -12,7 +13,7 @@ export default function TermsOfServicePage() {
       <header className="bg-white border-b border-gray-100 sticky top-0 z-10 shadow-sm">
         <div className="max-w-3xl mx-auto px-6 py-4 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
-            <img src="/logo-transparent.png" alt="ViewIL" width={32} height={32} />
+            <Image src="/logo-transparent.png" alt="ViewIL" width={32} height={32} />
             <span className="text-xl font-extrabold text-blue-600">ViewIL</span>
           </Link>
           <Link
@@ -74,7 +75,7 @@ export default function TermsOfServicePage() {
 
           <Section title="3. הגבלת אחריות">
             <p>
-              ViewIL מסופקת "כפי שהיא" (AS IS) ללא אחריות מכל סוג שהוא, מפורשת או משתמעת.
+              ViewIL מסופקת &quot;כפי שהיא&quot; (AS IS) ללא אחריות מכל סוג שהוא, מפורשת או משתמעת.
             </p>
             <p>
               ViewIL לא תישא באחריות לכל נזק ישיר, עקיף, מקרי, מיוחד או תוצאתי הנובע משימוש בשירות
@@ -108,7 +109,7 @@ export default function TermsOfServicePage() {
           <Section title="5. שינויים בתנאים">
             <p>
               ViewIL רשאית לשנות את תנאי השימוש מעת לעת. שינויים מהותיים יימסרו למשתמשים בהודעה
-              בדוא"ל או בהתראה בפלטפורמה.
+              בדוא&quot;ל או בהתראה בפלטפורמה.
             </p>
             <p>
               המשך השימוש בשירות לאחר פרסום תנאים מעודכנים מהווה הסכמה לתנאים החדשים.

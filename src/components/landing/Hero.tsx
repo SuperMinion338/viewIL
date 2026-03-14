@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import Link from "next/link";
+import Image from "next/image";
 
 export default function Hero() {
   return (
@@ -65,7 +66,7 @@ export default function Hero() {
           transition={{ duration: 0.5 }}
           className="flex justify-center mb-6"
         >
-          <img src="/logo-transparent.png" alt="ViewIL" width={80} height={80} />
+          <Image src="/logo-transparent.png" alt="ViewIL" width={80} height={80} />
         </motion.div>
 
         <motion.h1

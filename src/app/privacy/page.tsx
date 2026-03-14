@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { ArrowRight } from "lucide-react";
 
 export const metadata = {
@@ -12,7 +13,7 @@ export default function PrivacyPolicyPage() {
       <header className="bg-white border-b border-gray-100 sticky top-0 z-10 shadow-sm">
         <div className="max-w-3xl mx-auto px-6 py-4 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
-            <img src="/logo-transparent.png" alt="ViewIL" width={32} height={32} />
+            <Image src="/logo-transparent.png" alt="ViewIL" width={32} height={32} />
             <span className="text-xl font-extrabold text-blue-600">ViewIL</span>
           </Link>
           <Link
@@ -118,7 +119,7 @@ export default function PrivacyPolicyPage() {
               הגישה לבסיס הנתונים מוגבלת ומאובטחת.
             </p>
             <p>
-              במקרה של פרצת אבטחה שעלולה לפגוע בנתוניך, נודיע לך בהקדם האפשרי בדוא"ל ונפרט
+              במקרה של פרצת אבטחה שעלולה לפגוע בנתוניך, נודיע לך בהקדם האפשרי בדוא&quot;ל ונפרט
               את הצעדים שנוקטים לתיקון.
             </p>
             <p>
