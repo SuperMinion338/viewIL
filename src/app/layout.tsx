@@ -5,10 +5,6 @@ import Providers from "@/components/Providers";
 export const metadata: Metadata = {
   title: "ViewIL — כלי AI ליוצרי תוכן ישראלים",
   description: "סקריפטים, לוח תוכן, ניתוח שעות שיא — הכל בעברית, הכל במקום אחד",
-  icons: {
-    icon: "/favicon.ico",
-    shortcut: "/favicon.ico",
-  },
 };
 
 export default function RootLayout({
@@ -19,7 +15,6 @@ export default function RootLayout({
   return (
     <html lang="he" dir="rtl">
       <head>
-        <link rel="icon" href="/favicon.ico?v=2" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link
