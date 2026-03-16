@@ -8,19 +8,20 @@ import { useEffect, useState } from "react";
 import {
   FileText, Zap, Calendar, Clock, BarChart2, LogOut,
   ChevronLeft, User, CircleDollarSign, TrendingUp, MessageSquare,
-  UserCircle2, LayoutDashboard,
+  UserCircle2, LayoutDashboard, RefreshCw, Moon, Sun,
 } from "lucide-react";
 
 const tools = [
-  { id: "dashboard", icon: LayoutDashboard, label: "דשבורד", isNew: false },
-  { id: "script",    icon: FileText,        label: "כותב סקריפטים", isNew: true },
-  { id: "hooks",     icon: Zap,             label: "יוצר הוקים",    isNew: true },
-  { id: "viral",     icon: TrendingUp,      label: "ניתוח ויראלי",  isNew: true },
-  { id: "caption",   icon: MessageSquare,   label: "כותב קפשן",     isNew: true },
-  { id: "bio",       icon: UserCircle2,     label: "יוצר ביו",      isNew: true },
-  { id: "calendar",  icon: Calendar,        label: "לוח תוכן",      isNew: false },
-  { id: "time",      icon: Clock,           label: "שעות שיא",      isNew: false },
-  { id: "performance", icon: BarChart2,     label: "ניתוח ביצועים", isNew: false },
+  { id: "dashboard",  icon: LayoutDashboard, label: "דשבורד",        isNew: false },
+  { id: "script",     icon: FileText,        label: "כותב סקריפטים", isNew: false },
+  { id: "hooks",      icon: Zap,             label: "יוצר הוקים",    isNew: false },
+  { id: "repurpose",  icon: RefreshCw,       label: "שינוי פורמט",   isNew: true },
+  { id: "viral",      icon: TrendingUp,      label: "ניתוח ויראלי",  isNew: false },
+  { id: "caption",    icon: MessageSquare,   label: "כותב קפשן",     isNew: false },
+  { id: "bio",        icon: UserCircle2,     label: "יוצר ביו",      isNew: false },
+  { id: "calendar",   icon: Calendar,        label: "לוח תוכן",      isNew: false },
+  { id: "time",       icon: Clock,           label: "שעות שיא",      isNew: false },
+  { id: "performance", icon: BarChart2,      label: "ניתוח ביצועים", isNew: false },
 ];
 
 const standalonePages = [
@@ -34,13 +35,23 @@ interface SidebarProps {
   userName?: string | null;
   userEmail?: string | null;
   userImage?: string | null;
+  onThemeChange?: (isDark: boolean) => void;
 }
 
-export default function Sidebar({ activeTool, onSelectTool, userName, userEmail, userImage }: SidebarProps) {
+export default function Sidebar({ activeTool, onSelectTool, userName, userEmail, userImage, onThemeChange }: SidebarProps) {
   const pathname = usePathname();
   const isStandalonePage = pathname !== "/studio";
   const [scriptsThisMonth, setScriptsThisMonth] = useState<number | null>(null);
   const [seenBadges, setSeenBadges] = useState<Set<string>>(new Set());
+  const [isDark, setIsDark] = useState(false);
+
+  useEffect(() => {
+    // Load dark mode preference
+    const theme = localStorage.getItem("viewil_theme");
+    if (theme === "dark") {
+      setIsDark(true);
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     // Load already-seen badges from localStorage
@@ -63,6 +74,13 @@ export default function Sidebar({ activeTool, onSelectTool, userName, userEmail,
       setSeenBadges((prev) => new Set(Array.from(prev).concat(id)));
     }
     onSelectTool(id);
+  };
+
+  const toggleDark = () => {
+    const next = !isDark;
+    setIsDark(next);
+    localStorage.setItem("viewil_theme", next ? "dark" : "light");
+    onThemeChange?.(next);
   };
 
   const initials = userName
@@ -155,6 +173,14 @@ export default function Sidebar({ activeTool, onSelectTool, userName, userEmail,
             השתמשת ב-<span className="text-white/70 font-bold">{scriptsThisMonth}</span> סקריפטים החודש
           </div>
         )}
+
+        <button
+          onClick={toggleDark}
+          className="flex items-center gap-2.5 w-full px-3 py-2 rounded-xl text-white/45 hover:text-white hover:bg-white/8 transition-all duration-200 text-sm font-medium group mb-1"
+        >
+          {isDark ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 group-hover:text-blue-300 transition-colors" />}
+          <span>{isDark ? "מצב יום" : "מצב לילה"}</span>
+        </button>
 
         <button
           onClick={() => signOut({ callbackUrl: "/login" })}

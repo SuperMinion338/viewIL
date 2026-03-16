@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Copy, Loader2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -10,6 +10,8 @@ interface Hook {
   text: string;
 }
 
+const DRAFT_KEY = "viewil_draft_hooks";
+
 export default function HookGenerator() {
   const [topic, setTopic] = useState("");
   const [platform, setPlatform] = useState("tiktok");
@@ -17,6 +19,42 @@ export default function HookGenerator() {
   const [hooks, setHooks] = useState<Hook[]>([]);
   const [error, setError] = useState("");
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
+  const autosaveRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [hasDraft, setHasDraft] = useState(false);
+  const [draftDismissed, setDraftDismissed] = useState(false);
+
+  useEffect(() => {
+    const draft = localStorage.getItem(DRAFT_KEY);
+    if (draft) {
+      try {
+        const { topic: t } = JSON.parse(draft);
+        if (t) setHasDraft(true);
+      } catch {
+        localStorage.removeItem(DRAFT_KEY);
+      }
+    }
+  }, []);
+
+  const restoreDraft = () => {
+    const draft = localStorage.getItem(DRAFT_KEY);
+    if (!draft) return;
+    try {
+      const { topic: t, platform: p } = JSON.parse(draft);
+      if (t) setTopic(t);
+      if (p) setPlatform(p);
+    } catch { /* ignore */ }
+    setHasDraft(false);
+    setDraftDismissed(true);
+  };
+
+  useEffect(() => {
+    autosaveRef.current = setInterval(() => {
+      if (topic.trim()) {
+        localStorage.setItem(DRAFT_KEY, JSON.stringify({ topic, platform }));
+      }
+    }, 30000);
+    return () => { if (autosaveRef.current) clearInterval(autosaveRef.current); };
+  }, [topic, platform]);
 
   const handleGenerate = async () => {
     if (!topic.trim()) return;
@@ -33,6 +71,8 @@ export default function HookGenerator() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
       setHooks(data.hooks);
+      localStorage.removeItem(DRAFT_KEY);
+      setHasDraft(false);
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : "שגיאה ביצירת הפתיחות");
     } finally {
@@ -48,6 +88,26 @@ export default function HookGenerator() {
 
   return (
     <div className="flex flex-col gap-6" dir="rtl">
+      {hasDraft && !draftDismissed && (
+        <div className="flex items-center justify-between gap-3 bg-amber-50 border border-amber-200 rounded-2xl px-5 py-3">
+          <p className="text-sm text-amber-800 font-medium">📝 יש לך טיוטה שמורה — רוצה להמשיך ממנה?</p>
+          <div className="flex gap-2 shrink-0">
+            <button
+              onClick={restoreDraft}
+              className="text-sm font-bold text-amber-700 bg-amber-200 hover:bg-amber-300 px-3 py-1 rounded-full transition"
+            >
+              שחזר טיוטה
+            </button>
+            <button
+              onClick={() => { setHasDraft(false); setDraftDismissed(true); localStorage.removeItem(DRAFT_KEY); }}
+              className="text-sm text-amber-600 hover:text-amber-800 px-2 py-1 transition"
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+      )}
+
       <div>
         <h2 className="text-xl font-bold text-gray-800 mb-1">יוצר הוקים</h2>
         <p className="text-sm text-gray-500">קבל 5 פתיחות מנצחות לכל סרטון</p>

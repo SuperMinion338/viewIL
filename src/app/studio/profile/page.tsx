@@ -7,7 +7,7 @@ import Image from "next/image";
 import Sidebar from "@/components/studio/Sidebar";
 import Link from "next/link";
 import {
-  Camera, Save, Lock, Instagram, CheckCircle, Crown,
+  Camera, Save, Lock, Instagram, CheckCircle, Crown, Copy, Users,
 } from "lucide-react";
 import { Loader2 } from "lucide-react";
 
@@ -54,11 +54,22 @@ function ProfileContent() {
   const [socialError, setSocialError] = useState("");
 
   const [userCount, setUserCount] = useState<number | null>(null);
+  const [referralCode, setReferralCode] = useState<string | null>(null);
+  const [referralCount, setReferralCount] = useState<number>(0);
+  const [copiedReferral, setCopiedReferral] = useState(false);
 
   useEffect(() => {
     fetch("/api/user-count")
       .then((r) => r.json())
       .then((d) => setUserCount(d.count))
+      .catch(() => {});
+
+    fetch("/api/referral")
+      .then((r) => r.json())
+      .then((d) => {
+        setReferralCode(d.referralCode);
+        setReferralCount(d.referralCount ?? 0);
+      })
       .catch(() => {});
   }, []);
 
@@ -174,6 +185,17 @@ function ProfileContent() {
 
   const avatarUrl = avatarPreview || null;
   const userCountPct = userCount !== null ? Math.min(100, (userCount / MAX_USERS) * 100) : 0;
+
+  const referralLink = referralCode
+    ? `https://viewil.com/signup?ref=${referralCode}`
+    : null;
+
+  const handleCopyReferral = () => {
+    if (!referralLink) return;
+    navigator.clipboard.writeText(referralLink);
+    setCopiedReferral(true);
+    setTimeout(() => setCopiedReferral(false), 2000);
+  };
 
   return (
     <div className="flex min-h-screen bg-gray-50" dir="rtl">
@@ -368,6 +390,55 @@ function ProfileContent() {
                   {savingSocial ? <Loader2 className="w-4 h-4 animate-spin" /> : socialSaved ? <CheckCircle className="w-4 h-4" /> : <Save className="w-4 h-4" />}
                   {socialSaved ? "נשמר!" : "שמור רשתות חברתיות"}
                 </button>
+              </section>
+
+              {/* Referral section */}
+              <section className="bg-white border border-gray-200 rounded-2xl p-6 flex flex-col gap-5">
+                <h2 className="text-base font-bold text-gray-800 flex items-center gap-2">
+                  <Users className="w-5 h-5 text-blue-500" />
+                  הזמן חברים
+                </h2>
+
+                <div className="flex flex-col gap-4">
+                  <div className="flex items-center gap-4 bg-blue-50 border border-blue-200 rounded-2xl p-4">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-blue-800 mb-1">הקוד הייחודי שלך</p>
+                      <p className="text-xs text-blue-600 truncate">{referralLink || "טוען..."}</p>
+                    </div>
+                    <button
+                      onClick={handleCopyReferral}
+                      disabled={!referralLink}
+                      className={`shrink-0 flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition ${
+                        copiedReferral
+                          ? "bg-green-500 text-white"
+                          : "bg-blue-600 hover:bg-blue-700 text-white disabled:bg-gray-300"
+                      }`}
+                    >
+                      {copiedReferral ? <><CheckCircle className="w-4 h-4" />הועתק!</> : <><Copy className="w-4 h-4" />העתק לינק</>}
+                    </button>
+                  </div>
+
+                  <div className="flex items-center justify-between bg-gray-50 border border-gray-200 rounded-xl p-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
+                        <Users className="w-5 h-5 text-blue-600" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-bold text-gray-800">{referralCount} חברים הצטרפו</p>
+                        <p className="text-xs text-gray-500">דרך הקוד שלך</p>
+                      </div>
+                    </div>
+                    {referralCount > 0 && (
+                      <span className="text-xs font-bold text-green-700 bg-green-100 px-3 py-1 rounded-full">
+                        🎉 מגייס מצוין!
+                      </span>
+                    )}
+                  </div>
+
+                  <p className="text-xs text-gray-400 text-center">
+                    שתף את הלינק עם יוצרים ישראלים — כל הצטרפות נרשמת אוטומטית
+                  </p>
+                </div>
               </section>
 
               <section className="bg-white border border-gray-200 rounded-2xl p-6 flex flex-col gap-5">

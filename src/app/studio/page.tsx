@@ -16,11 +16,13 @@ import ViralScoreAnalyzer from "@/components/studio/ViralScoreAnalyzer";
 import CaptionWriter from "@/components/studio/CaptionWriter";
 import BioGenerator from "@/components/studio/BioGenerator";
 import Dashboard from "@/components/studio/Dashboard";
+import RepurposeTool from "@/components/studio/RepurposeTool";
 
 const TOOL_TITLES: Record<string, string> = {
   dashboard:   "דשבורד",
   script:      "כותב סקריפטים",
   hooks:       "יוצר הוקים",
+  repurpose:   "שינוי פורמט תוכן",
   viral:       "ניתוח פוטנציאל ויראלי",
   caption:     "כותב קפשן חכם",
   bio:         "יוצר ביו",
@@ -40,6 +42,12 @@ function StudioContent() {
   const router = useRouter();
   const [activeTool, setActiveTool] = useState(searchParams.get("tool") ?? "dashboard");
   const { data: session } = useSession();
+  const [isDark, setIsDark] = useState(false);
+
+  useEffect(() => {
+    const theme = localStorage.getItem("viewil_theme");
+    setIsDark(theme === "dark");
+  }, []);
 
   useEffect(() => {
     const tool = searchParams.get("tool") ?? "dashboard";
@@ -58,6 +66,7 @@ function StudioContent() {
       case "dashboard":   return <Dashboard userName={session?.user?.name} onSelectTool={selectTool} />;
       case "script":      return <ScriptWriter />;
       case "hooks":       return <HookGenerator />;
+      case "repurpose":   return <RepurposeTool />;
       case "viral":       return <ViralScoreAnalyzer />;
       case "caption":     return <CaptionWriter />;
       case "bio":         return <BioGenerator />;
@@ -69,7 +78,7 @@ function StudioContent() {
   };
 
   return (
-    <div className="flex min-h-screen bg-gray-50" dir="rtl">
+    <div className={`flex min-h-screen ${isDark ? "dark bg-gray-900" : "bg-gray-50"}`} dir="rtl">
       <OnboardingModal />
       <Sidebar
         activeTool={activeTool}
@@ -77,21 +86,22 @@ function StudioContent() {
         userName={session?.user?.name}
         userEmail={session?.user?.email}
         userImage={session?.user?.image}
+        onThemeChange={setIsDark}
       />
 
       <div className="flex-1 flex flex-col min-w-0">
-        <header className="bg-white border-b border-gray-100 px-4 md:px-6 py-4 flex items-center justify-between sticky top-0 z-10 shadow-sm">
+        <header className={`${isDark ? "bg-gray-800 border-gray-700 text-white" : "bg-white border-gray-100"} border-b px-4 md:px-6 py-4 flex items-center justify-between sticky top-0 z-10 shadow-sm`}>
           <div>
-            <h1 className="text-base md:text-lg font-bold text-gray-800">{TOOL_TITLES[activeTool] || "סטודיו"}</h1>
-            <p className="text-xs text-gray-400 hidden sm:block">{getHebrewDate()}</p>
+            <h1 className={`text-base md:text-lg font-bold ${isDark ? "text-white" : "text-gray-800"}`}>{TOOL_TITLES[activeTool] || "סטודיו"}</h1>
+            <p className={`text-xs hidden sm:block ${isDark ? "text-gray-400" : "text-gray-400"}`}>{getHebrewDate()}</p>
           </div>
           <div className="flex items-center gap-2">
             <span className="text-lg">👋</span>
-            <p className="text-gray-700 font-semibold text-sm">שלום, {firstName}!</p>
+            <p className={`font-semibold text-sm ${isDark ? "text-gray-200" : "text-gray-700"}`}>שלום, {firstName}!</p>
           </div>
         </header>
 
-        <main className="flex-1 p-3 md:p-6 max-w-6xl w-full pb-20 md:pb-6 overflow-x-hidden">
+        <main className={`flex-1 p-3 md:p-6 max-w-6xl w-full pb-20 md:pb-6 overflow-x-hidden ${isDark ? "text-gray-100" : ""}`}>
           <AnimatePresence mode="wait">
             <motion.div
               key={activeTool}

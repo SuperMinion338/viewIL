@@ -2,9 +2,18 @@ import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 
+function generateReferralCode(): string {
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  let code = "";
+  for (let i = 0; i < 8; i++) {
+    code += chars[Math.floor(Math.random() * chars.length)];
+  }
+  return code;
+}
+
 export async function POST(req: NextRequest) {
   try {
-    const { name, email, password } = await req.json();
+    const { name, email, password, ref } = await req.json();
 
     if (!name?.trim() || !email?.trim() || !password) {
       return NextResponse.json({ error: "כל השדות הם חובה" }, { status: 400 });
@@ -32,14 +41,35 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Generate unique referral code
+    let referralCode = generateReferralCode();
+    let codeExists = await prisma.user.findUnique({ where: { referralCode } });
+    while (codeExists) {
+      referralCode = generateReferralCode();
+      codeExists = await prisma.user.findUnique({ where: { referralCode } });
+    }
+
     const hash = await bcrypt.hash(password, 12);
-    await prisma.user.create({
+    const newUser = await prisma.user.create({
       data: {
         name: name.trim(),
         email: email.toLowerCase(),
         password: hash,
+        referralCode,
       },
     });
+
+    // If referred by someone, create Referral record
+    if (ref && typeof ref === "string" && ref.trim()) {
+      const referrer = await prisma.user.findUnique({
+        where: { referralCode: ref.trim().toUpperCase() },
+      });
+      if (referrer && referrer.id !== newUser.id) {
+        await prisma.referral.create({
+          data: { referrerId: referrer.id, referredId: newUser.id },
+        });
+      }
+    }
 
     return NextResponse.json({ success: true });
   } catch (error) {

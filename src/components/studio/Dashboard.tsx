@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { FileText, Zap, BarChart2, Flame, Clock } from "lucide-react";
+import { FileText, Zap, Flame, Clock, Users } from "lucide-react";
 
 interface DashboardStats {
   scriptsTotal: number;
@@ -47,11 +47,17 @@ function timeAgo(iso: string) {
 export default function Dashboard({ userName, onSelectTool }: { userName?: string | null; onSelectTool: (id: string) => void }) {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [tipIndex] = useState(() => new Date().getDay() % TIPS.length);
+  const [referralCount, setReferralCount] = useState<number | null>(null);
 
   useEffect(() => {
     fetch("/api/dashboard-stats")
       .then((r) => r.json())
       .then((d) => setStats(d))
+      .catch(() => {});
+
+    fetch("/api/referral")
+      .then((r) => r.json())
+      .then((d) => setReferralCount(d.referralCount ?? 0))
       .catch(() => {});
   }, []);
 
@@ -60,8 +66,8 @@ export default function Dashboard({ userName, onSelectTool }: { userName?: strin
   const statCards = [
     { icon: FileText, label: "סקריפטים שנוצרו", value: stats?.scriptsTotal ?? "—", color: "text-blue-600", bg: "bg-blue-50", border: "border-blue-100" },
     { icon: Zap, label: "הוקים שנוצרו", value: stats?.hooksTotal ?? "—", color: "text-amber-600", bg: "bg-amber-50", border: "border-amber-100" },
-    { icon: BarChart2, label: "ניתוחים שנשמרו", value: stats?.analysesTotal ?? "—", color: "text-green-600", bg: "bg-green-50", border: "border-green-100" },
     { icon: Flame, label: "ימים רצופים", value: stats?.streak ?? "—", color: "text-red-600", bg: "bg-red-50", border: "border-red-100" },
+    { icon: Users, label: "חברים שהזמנת", value: referralCount ?? "—", color: "text-purple-600", bg: "bg-purple-50", border: "border-purple-100" },
   ];
 
   const quickActions = [

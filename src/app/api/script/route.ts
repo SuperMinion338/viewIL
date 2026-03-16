@@ -6,11 +6,18 @@ const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
 export async function POST(req: NextRequest) {
   try {
-    const { idea, tone } = await req.json();
+    const { idea, tone, length } = await req.json();
 
     if (!idea) {
       return NextResponse.json({ error: "חסר רעיון לסרטון" }, { status: 400 });
     }
+
+    const lengthMap: Record<string, string> = {
+      "60s": "60 שניות (כ-100 מילה בגוף)",
+      "3min": "3 דקות (כ-350 מילה בגוף)",
+      "10min": "10 דקות (כ-1,200 מילה בגוף)",
+    };
+    const lengthText = lengthMap[length] || "3 דקות (כ-350 מילה בגוף)";
 
     if (containsBlockedWords(idea)) {
       return NextResponse.json(
@@ -51,6 +58,7 @@ Always write in Israeli slang where appropriate (אחי, בן אדם, ממש, ו
         {
           role: "user",
           content: `הטון המבוקש: ${toneText}
+אורך הסרטון: ${lengthText}
 רעיון לסרטון: ${idea}
 
 כתוב סקריפט מלא בפורמט הבא בדיוק (השתמש בכותרות האלה):
@@ -59,7 +67,7 @@ Always write in Israeli slang where appropriate (אחי, בן אדם, ממש, ו
 [כתוב כאן את הפתיחה המושכת — מקסימום 2-3 משפטים, חייב לעצור גלילה]
 
 גוף הסרטון:
-[כתוב כאן את התוכן הראשי — מינימום 300 מילה, עם פרטים ספציפיים, סיפור אמיתי, הומור אם רלוונטי. כתוב כאילו אתה מדבר לחבר אחד]
+[כתוב כאן את התוכן הראשי — התאם את אורך הכתיבה לאורך הסרטון המבוקש. כתוב כאילו אתה מדבר לחבר אחד]
 
 סיום (קריאה לפעולה):
 [כתוב כאן קריאה אחת ברורה וקלילה בלבד]

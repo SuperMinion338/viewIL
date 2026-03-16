@@ -18,9 +18,12 @@ interface Hashtags {
   small: string[];
 }
 
+const DRAFT_KEY = "viewil_draft_script";
+
 export default function ScriptWriter() {
   const [idea, setIdea] = useState("");
   const [tone, setTone] = useState("educational");
+  const [length, setLength] = useState("3min");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<ScriptResult | null>(null);
   const [error, setError] = useState("");
@@ -29,6 +32,9 @@ export default function ScriptWriter() {
   const hasConfettied = useRef(false);
   const [countdown, setCountdown] = useState(0);
   const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const autosaveRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [hasDraft, setHasDraft] = useState(false);
+  const [draftDismissed, setDraftDismissed] = useState(false);
 
   // Hashtags
   const [hashtags, setHashtags] = useState<Hashtags | null>(null);
@@ -40,6 +46,44 @@ export default function ScriptWriter() {
   const [titles, setTitles] = useState<string[] | null>(null);
   const [loadingTitles, setLoadingTitles] = useState(false);
   const [copiedTitle, setCopiedTitle] = useState<string | null>(null);
+
+  // Load draft on mount
+  useEffect(() => {
+    const draft = localStorage.getItem(DRAFT_KEY);
+    if (draft) {
+      try {
+        const { idea: draftIdea, tone: draftTone, length: draftLength } = JSON.parse(draft);
+        if (draftIdea) setHasDraft(true);
+        // Don't auto-restore yet — show banner first
+        void draftIdea; void draftTone; void draftLength;
+      } catch {
+        localStorage.removeItem(DRAFT_KEY);
+      }
+    }
+  }, []);
+
+  const restoreDraft = () => {
+    const draft = localStorage.getItem(DRAFT_KEY);
+    if (!draft) return;
+    try {
+      const { idea: draftIdea, tone: draftTone, length: draftLength } = JSON.parse(draft);
+      if (draftIdea) setIdea(draftIdea);
+      if (draftTone) setTone(draftTone);
+      if (draftLength) setLength(draftLength);
+    } catch { /* ignore */ }
+    setHasDraft(false);
+    setDraftDismissed(true);
+  };
+
+  // Autosave every 30s when idea has content
+  useEffect(() => {
+    autosaveRef.current = setInterval(() => {
+      if (idea.trim()) {
+        localStorage.setItem(DRAFT_KEY, JSON.stringify({ idea, tone, length }));
+      }
+    }, 30000);
+    return () => { if (autosaveRef.current) clearInterval(autosaveRef.current); };
+  }, [idea, tone, length]);
 
   useEffect(() => {
     return () => { if (countdownRef.current) clearInterval(countdownRef.current); };
@@ -103,7 +147,7 @@ export default function ScriptWriter() {
       const res = await fetch("/api/script", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ idea, tone }),
+        body: JSON.stringify({ idea, tone, length }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -113,6 +157,9 @@ export default function ScriptWriter() {
       setResult(data);
       setJustGenerated(true);
       setTimeout(() => setJustGenerated(false), 1200);
+      // Clear saved draft after successful generation
+      localStorage.removeItem(DRAFT_KEY);
+      setHasDraft(false);
       if (!hasConfettied.current) {
         hasConfettied.current = true;
         confetti({ particleCount: 120, spread: 80, origin: { y: 0.6 }, colors: ["#2563EB", "#60A5FA", "#34D399", "#FBBF24"] });
@@ -168,6 +215,27 @@ export default function ScriptWriter() {
 
   return (
     <div className="flex flex-col gap-6" dir="rtl">
+      {/* Draft banner */}
+      {hasDraft && !draftDismissed && (
+        <div className="flex items-center justify-between gap-3 bg-amber-50 border border-amber-200 rounded-2xl px-5 py-3">
+          <p className="text-sm text-amber-800 font-medium">📝 יש לך טיוטה שמורה — רוצה להמשיך ממנה?</p>
+          <div className="flex gap-2 shrink-0">
+            <button
+              onClick={restoreDraft}
+              className="text-sm font-bold text-amber-700 bg-amber-200 hover:bg-amber-300 px-3 py-1 rounded-full transition"
+            >
+              שחזר טיוטה
+            </button>
+            <button
+              onClick={() => { setHasDraft(false); setDraftDismissed(true); localStorage.removeItem(DRAFT_KEY); }}
+              className="text-sm text-amber-600 hover:text-amber-800 px-2 py-1 transition"
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+      )}
+
       <div className="flex flex-col lg:flex-row gap-6">
         {/* Input panel */}
         <div className="lg:w-2/5 flex flex-col gap-4">
@@ -201,6 +269,32 @@ export default function ScriptWriter() {
               <option value="inspirational">🌟 מעורר השראה</option>
               <option value="educational">📚 חינוכי ומלמד</option>
             </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              אורך הסרטון
+            </label>
+            <div className="flex gap-2">
+              {[
+                { value: "60s", label: "60 שניות", desc: "~100 מילה" },
+                { value: "3min", label: "3 דקות", desc: "~350 מילה" },
+                { value: "10min", label: "10 דקות", desc: "~1,200 מילה" },
+              ].map(({ value, label, desc }) => (
+                <button
+                  key={value}
+                  onClick={() => setLength(value)}
+                  className={`flex-1 flex flex-col items-center py-2.5 px-2 rounded-xl text-sm font-medium transition border-2 ${
+                    length === value
+                      ? "border-blue-600 bg-blue-50 text-blue-700"
+                      : "border-gray-200 text-gray-600 hover:border-gray-300"
+                  }`}
+                >
+                  <span className="font-bold">{label}</span>
+                  <span className="text-xs opacity-60 mt-0.5">{desc}</span>
+                </button>
+              ))}
+            </div>
           </div>
 
           <motion.button
