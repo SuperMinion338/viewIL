@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Copy, Save, Loader2, Hash, CheckCircle2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import confetti from "canvas-confetti";
 
 interface ScriptResult {
   hook: string;
@@ -25,6 +26,7 @@ export default function ScriptWriter() {
   const [error, setError] = useState("");
   const [saved, setSaved] = useState(false);
   const [justGenerated, setJustGenerated] = useState(false);
+  const hasConfettied = useRef(false);
   const [countdown, setCountdown] = useState(0);
   const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -111,6 +113,10 @@ export default function ScriptWriter() {
       setResult(data);
       setJustGenerated(true);
       setTimeout(() => setJustGenerated(false), 1200);
+      if (!hasConfettied.current) {
+        hasConfettied.current = true;
+        confetti({ particleCount: 120, spread: 80, origin: { y: 0.6 }, colors: ["#2563EB", "#60A5FA", "#34D399", "#FBBF24"] });
+      }
       // Generate hashtags from full script text
       const fullText = data.full || `${data.hook}\n${data.body}\n${data.cta}`;
       generateHashtags(fullText);

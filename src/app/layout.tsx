@@ -7,11 +7,12 @@ import { SpeedInsights } from "@vercel/speed-insights/next";
 export const metadata: Metadata = {
   title: "ViewIL — כלי AI ליוצרי תוכן ישראלים",
   description:
-    "סקריפטים, לוח תוכן, ניתוח שעות שיא — הכל בעברית, הכל במקום אחד. כלי AI בחינם ליוצרי תוכן ישראלים.",
-  keywords: "יוצרי תוכן, ישראל, AI, סקריפטים, טיקטוק, אינסטגרם, יוטיוב, ViewIL",
+    "כתוב סקריפטים, צור הוקים, נהל לוח תוכן ונתח ביצועים — הכל בעברית. הצטרף ל-1,000 יוצרים ישראלים.",
+  keywords: "יוצרי תוכן ישראל, כלי AI עברית, סקריפט לסרטון, תוכן טיקטוק אינסטגרם",
   openGraph: {
     title: "ViewIL — כלי AI ליוצרי תוכן ישראלים",
-    description: "סקריפטים, לוח תוכן, ניתוח שעות שיא — הכל בעברית, הכל במקום אחד",
+    description: "כתוב סקריפטים, צור הוקים, נהל לוח תוכן ונתח ביצועים — הכל בעברית.",
+    url: "https://viewil.com",
     images: [{ url: "/logo-transparent.png", width: 400, height: 400, alt: "ViewIL" }],
     locale: "he_IL",
     type: "website",
@@ -20,7 +21,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary",
     title: "ViewIL — כלי AI ליוצרי תוכן ישראלים",
-    description: "סקריפטים, לוח תוכן, ניתוח שעות שיא — הכל בעברית",
+    description: "כתוב סקריפטים, צור הוקים, נהל לוח תוכן — הכל בעברית.",
     images: ["/logo-transparent.png"],
   },
   robots: { index: true, follow: true },

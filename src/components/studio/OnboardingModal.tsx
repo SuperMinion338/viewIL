@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X } from "lucide-react";
 
-const STORAGE_KEY = "viewil_onboarded_v1";
+const STORAGE_KEY = "viewil_onboarding_done";
 
 const steps = [
   {
