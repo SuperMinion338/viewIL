@@ -34,6 +34,11 @@ export default function ScriptWriter() {
   const [copiedTag, setCopiedTag] = useState<string | null>(null);
   const [copiedAll, setCopiedAll] = useState(false);
 
+  // Titles
+  const [titles, setTitles] = useState<string[] | null>(null);
+  const [loadingTitles, setLoadingTitles] = useState(false);
+  const [copiedTitle, setCopiedTitle] = useState<string | null>(null);
+
   useEffect(() => {
     return () => { if (countdownRef.current) clearInterval(countdownRef.current); };
   }, []);
@@ -46,6 +51,24 @@ export default function ScriptWriter() {
         return prev - 1;
       });
     }, 1000);
+  };
+
+  const generateTitles = async (scriptText: string) => {
+    setLoadingTitles(true);
+    setTitles(null);
+    try {
+      const res = await fetch("/api/titles", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ script: scriptText }),
+      });
+      const data = await res.json();
+      if (res.ok) setTitles(data.titles);
+    } catch {
+      // silent — titles are optional
+    } finally {
+      setLoadingTitles(false);
+    }
   };
 
   const generateHashtags = async (scriptText: string) => {
@@ -72,6 +95,7 @@ export default function ScriptWriter() {
     setError("");
     setResult(null);
     setHashtags(null);
+    setTitles(null);
 
     try {
       const res = await fetch("/api/script", {
@@ -339,6 +363,53 @@ export default function ScriptWriter() {
                     {result.cta}
                   </div>
                 </div>
+
+                {/* Title generator button */}
+                <motion.button
+                  onClick={() => {
+                    const fullText = result.full || `${result.hook}\n${result.body}\n${result.cta}`;
+                    generateTitles(fullText);
+                  }}
+                  disabled={loadingTitles}
+                  whileHover={{ scale: loadingTitles ? 1 : 1.02 }}
+                  whileTap={{ scale: loadingTitles ? 1 : 0.97 }}
+                  className="flex items-center justify-center gap-2 w-full border-2 border-purple-200 text-purple-600 hover:bg-purple-50 disabled:opacity-60 font-bold py-3 rounded-2xl transition"
+                >
+                  {loadingTitles ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      יוצר כותרות...
+                    </>
+                  ) : (
+                    "✨ צור לי כותרת"
+                  )}
+                </motion.button>
+
+                {/* Title chips */}
+                {titles && titles.length > 0 && (
+                  <div className="bg-purple-50 border border-purple-200 rounded-2xl p-4 flex flex-col gap-3">
+                    <p className="text-sm font-bold text-purple-700">5 כותרות לסרטון — לחץ להעתקה:</p>
+                    <div className="flex flex-wrap gap-2">
+                      {titles.map((title, i) => (
+                        <button
+                          key={i}
+                          onClick={() => {
+                            navigator.clipboard.writeText(title);
+                            setCopiedTitle(title);
+                            setTimeout(() => setCopiedTitle(null), 1500);
+                          }}
+                          className={`px-4 py-2 rounded-full text-sm font-medium transition border ${
+                            copiedTitle === title
+                              ? "bg-green-100 border-green-300 text-green-700"
+                              : "bg-white border-purple-300 text-purple-700 hover:bg-purple-100"
+                          }`}
+                        >
+                          {copiedTitle === title ? "✓ הועתק" : title}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
                 <motion.button
                   onClick={handleSave}

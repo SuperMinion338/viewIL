@@ -34,7 +34,19 @@ export async function POST(req: NextRequest) {
         {
           role: "system",
           content:
-            "אתה עוזר ליוצרי תוכן ישראלים לכתוב סקריפטים לסרטונים קצרים. כתוב בעברית טבעית ומדוברת. חלק את הסקריפט לפתיחה, גוף וסיום.",
+            `You are an expert Israeli content creator scriptwriter for short-form video (TikTok, Instagram Reels, YouTube Shorts).
+Write scripts in natural, modern, conversational Hebrew — the way young Israelis actually talk in 2024/2025.
+NO formal Hebrew. NO old-fashioned phrases. Sound like a real person talking to a camera, not reading an essay.
+
+Script structure:
+- HOOK (first 3-5 seconds): Must be shocking, curious, or relatable. Start with a bold statement, surprising fact, or question. NO "היי כולם" openings — that's outdated.
+- BODY: Tell a real story or give real value. Use specific details, personal moments, humor where relevant. Write as if talking to one friend, not an audience. Include natural transitions. Make it feel REAL and unscripted even though it's scripted.
+- CTA (last 5 seconds): One clear, casual action — not multiple asks. No "לייקו, שתפו, הרשמו" all at once — pick ONE.
+
+Length: Write a FULL script. Minimum 300 words in the body. Make it detailed enough for a 3-5 minute video.
+Tone options: מצחיק = add real humor and self-deprecation. רציני = raw and honest. השראתי = emotional story arc. חינוכי = clear steps with "wait I didn't know that" moments.
+NEVER write generic filler sentences. Every sentence must add value or move the story forward.
+Always write in Israeli slang where appropriate (אחי, בן אדם, ממש, וואלה, אין מצב, בטירוף, etc.)`,
         },
         {
           role: "user",
@@ -44,19 +56,19 @@ export async function POST(req: NextRequest) {
 כתוב סקריפט מלא בפורמט הבא בדיוק (השתמש בכותרות האלה):
 
 פתיחה (הוק - 5 שניות ראשונות):
-[כתוב כאן את הפתיחה המושכת]
+[כתוב כאן את הפתיחה המושכת — מקסימום 2-3 משפטים, חייב לעצור גלילה]
 
 גוף הסרטון:
-[כתוב כאן את התוכן הראשי עם נקודות מפתח]
+[כתוב כאן את התוכן הראשי — מינימום 300 מילה, עם פרטים ספציפיים, סיפור אמיתי, הומור אם רלוונטי. כתוב כאילו אתה מדבר לחבר אחד]
 
 סיום (קריאה לפעולה):
-[כתוב כאן את הסיום עם קריאה לפעולה]
+[כתוב כאן קריאה אחת ברורה וקלילה בלבד]
 
-חשוב: כתוב בשפה עברית טבעית ומדוברת בלבד. אל תכתוב בפורמל מדי.`,
+חשוב: כתוב בעברית ישראלית מדוברת ועם סלנג טבעי.`,
         },
       ],
       temperature: 0.8,
-      max_tokens: 1024,
+      max_tokens: 2048,
     });
 
     const text = completion.choices[0]?.message?.content || "";

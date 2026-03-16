@@ -32,7 +32,24 @@ export async function POST(req: NextRequest) {
       messages: [
         {
           role: "system",
-          content: "אתה מומחה לתוכן ברשתות חברתיות ישראליות. כתוב בעברית מדוברת ומושכת בלבד.",
+          content:
+            `You are an expert at writing viral hooks for Israeli short-form video content.
+Generate 5 hooks in natural modern Hebrew — the way young Israelis actually talk.
+NO formal Hebrew. NO "היי כולם". Sound real, raw, and attention-grabbing.
+
+Each hook must be a different TYPE:
+1. עובדה מטורפת — shocking stat or fact that stops the scroll
+2. שאלה מסקרנת — a question that makes them NEED to know the answer
+3. סיפור אישי — starts mid-story, feels like you're already in the action
+4. קונטרה — says the opposite of what people expect
+5. הבטחה — promises a specific result or transformation
+
+Rules:
+- Maximum 2 sentences per hook
+- Must feel like something a real Israeli creator would say in 2025
+- Use Israeli slang naturally (וואלה, אחי, בטח, אין מצב, ממש)
+- Each hook should create immediate curiosity or emotional reaction
+- NO generic hooks like "היום אני הולך לספר לכם על..."`,
         },
         {
           role: "user",
@@ -42,22 +59,22 @@ export async function POST(req: NextRequest) {
 
 צור בדיוק 5 פתיחות, אחת לכל סגנון, בפורמט הבא:
 
-סגנון 1 - שאלה מסקרנת:
+סגנון 1 - עובדה מטורפת:
 [פתיחה]
 
-סגנון 2 - עובדה מפתיעה:
+סגנון 2 - שאלה מסקרנת:
 [פתיחה]
 
-סגנון 3 - הבטחה:
+סגנון 3 - סיפור אישי:
 [פתיחה]
 
-סגנון 4 - סיפור אישי:
+סגנון 4 - קונטרה:
 [פתיחה]
 
-סגנון 5 - שוק/פרובוקציה:
+סגנון 5 - הבטחה:
 [פתיחה]
 
-כל פתיחה צריכה להיות 1-2 משפטים בעברית מדוברת ומושכת. אל תכלול הסברים, רק את הפתיחות עצמן.`,
+כל פתיחה — מקסימום 2 משפטים בעברית ישראלית מדוברת ואמיתית. ללא הסברים, רק הפתיחות עצמן.`,
         },
       ],
       temperature: 0.9,
@@ -67,11 +84,11 @@ export async function POST(req: NextRequest) {
     const text = completion.choices[0]?.message?.content || "";
 
     const styles = [
+      { key: "עובדה מטורפת", label: "עובדה מטורפת", icon: "🤯" },
       { key: "שאלה מסקרנת", label: "שאלה מסקרנת", icon: "❓" },
-      { key: "עובדה מפתיעה", label: "עובדה מפתיעה", icon: "🤯" },
-      { key: "הבטחה", label: "הבטחה", icon: "🎯" },
       { key: "סיפור אישי", label: "סיפור אישי", icon: "📖" },
-      { key: "שוק", label: "שוק/פרובוקציה", icon: "⚡" },
+      { key: "קונטרה", label: "קונטרה", icon: "⚡" },
+      { key: "הבטחה", label: "הבטחה", icon: "🎯" },
     ];
 
     const hooks = styles.map((style) => {
