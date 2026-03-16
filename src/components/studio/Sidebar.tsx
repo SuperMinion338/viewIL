@@ -60,7 +60,7 @@ export default function Sidebar({ activeTool, onSelectTool, userName, userEmail,
     // Mark badge as seen
     if (!seenBadges.has(id)) {
       localStorage.setItem(`viewil_seen_new_${id}`, "1");
-      setSeenBadges((prev) => new Set([...prev, id]));
+      setSeenBadges((prev) => new Set(Array.from(prev).concat(id)));
     }
     onSelectTool(id);
   };

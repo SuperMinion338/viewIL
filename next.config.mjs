@@ -1,6 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  serverExternalPackages: ["@prisma/client", "@prisma/adapter-neon"],
+  experimental: {
+    serverComponentsExternalPackages: ["@prisma/client", "@prisma/adapter-neon"],
+  },
   async redirects() {
     return [
       {

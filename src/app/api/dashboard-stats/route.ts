@@ -39,7 +39,7 @@ export async function GET() {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const days = new Set(allDates.map((d) => d.createdAt.toISOString().split("T")[0]));
-    let cursor = new Date(today);
+    const cursor = new Date(today);
     while (days.has(cursor.toISOString().split("T")[0])) {
       streak++;
       cursor.setDate(cursor.getDate() - 1);
