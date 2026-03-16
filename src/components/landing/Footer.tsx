@@ -74,8 +74,16 @@ export default function Footer() {
           </nav>
         </div>
 
+        {/* Trust signals */}
+        <div className="mt-8 flex flex-wrap justify-center gap-4 text-xs text-gray-400">
+          <span className="flex items-center gap-1.5">🔒 מאובטח עם הצפנת SSL</span>
+          <span className="flex items-center gap-1.5">🛡️ פרטיות מלאה</span>
+          <span className="flex items-center gap-1.5">💳 ללא כרטיס אשראי</span>
+          <span className="flex items-center gap-1.5">🇮🇱 100% בעברית</span>
+        </div>
+
         {/* Bottom row */}
-        <div className="mt-8 text-center space-y-1">
+        <div className="mt-4 text-center space-y-1">
           <p className="text-sm text-gray-500">נבנה ע״י עידו שדה 🇮🇱</p>
           <p className="text-xs text-gray-400">© 2026 ViewIL. כל הזכויות שמורות.</p>
         </div>

@@ -11,6 +11,7 @@ import HookGenerator from "@/components/studio/HookGenerator";
 import ContentCalendar from "@/components/studio/ContentCalendar";
 import TimeAnalyzer from "@/components/studio/TimeAnalyzer";
 import PerformanceAnalyzer from "@/components/studio/PerformanceAnalyzer";
+import OnboardingModal from "@/components/studio/OnboardingModal";
 
 const TOOL_TITLES: Record<string, string> = {
   script: "כותב סקריפטים",
@@ -55,6 +56,7 @@ function StudioContent() {
 
   return (
     <div className="flex min-h-screen bg-gray-50" dir="rtl">
+      <OnboardingModal />
       <Sidebar
         activeTool={activeTool}
         onSelectTool={(id) => { setActiveTool(id); router.push(`/studio?tool=${id}`, { scroll: false }); }}

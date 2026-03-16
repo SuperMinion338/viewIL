@@ -3,131 +3,75 @@
 import { useState } from "react";
 
 const DAYS = ["ראשון", "שני", "שלישי", "רביעי", "חמישי", "שישי", "שבת"];
-const HOURS = [23, 22, 21, 20, 19, 18, 17, 16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6];
+const HOURS = [6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23];
 
-// Heat levels 0-7 — Israeli audience 2026 data (UTC+2/+3)
+// Heat levels 0-4: 0=blocked/very low, 1=low, 2=medium, 3=high, 4=peak
 // dayIndex: 0=Sun, 1=Mon, 2=Tue, 3=Wed, 4=Thu, 5=Fri, 6=Sat
 function getHeatLevel(platform: string, dayIndex: number, hourIndex: number): number {
   const hour = HOURS[hourIndex];
-  const isSunday    = dayIndex === 0;
-  const isMonday    = dayIndex === 1;
-  const isTueWedThu = dayIndex >= 2 && dayIndex <= 4;
-  const isThursday  = dayIndex === 4;
-  const isFriday    = dayIndex === 5;
-  const isSaturday  = dayIndex === 6;
-  const isMonToThu  = dayIndex >= 1 && dayIndex <= 4;
+  const isSun = dayIndex === 0;
+  const isFri = dayIndex === 5;
+  const isSat = dayIndex === 6;
 
-  // Saturday: Shabbat — block all
-  // Exception: YouTube Saturday night (after ~20:00, Shabbat ends)
-  if (isSaturday) {
-    if (platform === "youtube" && hour >= 20) return 5;
-    return 0;
-  }
-
-  // Friday 14:00–20:00: Shabbat prep — avoid all platforms
-  if (isFriday && hour >= 14 && hour < 20) return 1;
-
-  // ── INSTAGRAM ──
-  // Best days: Tue, Wed, Thu | Morning: 09–11 | Lunch: 13–14 | Evening: 19–21
-  // Avoid: Sunday before 10:00
   if (platform === "instagram") {
-    if (isSunday && hour < 10) return 1;
-
-    // Evening peak 19:00–21:00
-    if (hour >= 19 && hour <= 21) {
-      if (isTueWedThu) return 7;
-      if (isFriday) return 2; // Friday evening (Shabbat has started)
-      return 5; // Mon, Sun
+    if (isSat) return 0;
+    if (isFri) {
+      if (hour >= 9 && hour < 13) return 2;
+      return 0;
     }
-    // Lunch peak 13:00–14:00
-    if (hour >= 13 && hour <= 14) {
-      if (isTueWedThu) return 6;
-      return 4;
-    }
-    // Morning peak 09:00–11:00
-    if (hour >= 9 && hour <= 11) {
-      if (isTueWedThu) return 5;
-      if (isFriday) return 4;
-      return 3;
-    }
-    // Friday morning 8:00–13:00
-    if (isFriday && hour >= 8 && hour < 14) return 3;
-    if (hour < 8) return 1;
-    return 2;
+    // Sun–Thu
+    if (hour >= 19 && hour <= 21) return 4;
+    if (hour >= 9 && hour <= 11) return 3;
+    if (hour >= 13 && hour <= 14) return 2;
+    return 1;
   }
 
-  // ── TIKTOK ──
-  // Best: Mon–Thu + weekends | Morning: 07–09 | Evening: 19–23 (strongest)
-  // Thu & Fri evenings: absolute peak | Weekend afternoon: 14–17
-  // Avoid: Friday 14:00–20:00 (Shabbat prep) — already handled above
   if (platform === "tiktok") {
-    if (isFriday) {
-      if (hour >= 20) return 7;           // Post-Shabbat: absolute peak
-      if (hour >= 7 && hour <= 9) return 6;  // Friday morning peak
-      if (hour >= 10 && hour < 14) return 5; // Friday midday (before Shabbat prep)
+    if (isSat) {
+      if (hour >= 21 && hour <= 23) return 3;
+      return 0;
+    }
+    if (isFri) {
+      if (hour >= 20) return 4;
+      if (hour >= 7 && hour <= 9) return 3;
+      return 0;
+    }
+    // Sun–Thu
+    if (hour >= 19 && hour <= 23) return 4;
+    if (hour >= 7 && hour <= 9) return 3;
+    if (hour >= 12 && hour <= 13) return 2;
+    return 1;
+  }
+
+  if (platform === "youtube") {
+    if (isSat) {
+      if (hour >= 20 && hour <= 23) return 3;
+      return 0;
+    }
+    if (isFri) {
+      if (hour >= 9 && hour < 12) return 2;
+      return 0;
+    }
+    if (isSun) {
+      if (hour >= 19 && hour <= 22) return 4;
+      if ((hour >= 9 && hour <= 11) || (hour >= 14 && hour <= 16)) return 2;
       return 1;
     }
-
-    // Evening peak 19:00–23:00 (strongest window)
-    if (hour >= 19 && hour <= 23) {
-      if (isThursday || isMonday) return 7; // Absolute peak on Thu & Mon
-      if (isMonToThu) return 7;
-      if (isSunday) return 6;
-      return 5;
-    }
-    // Morning peak 07:00–09:00
-    if (hour >= 7 && hour <= 9) {
-      if (isMonToThu) return 6;
-      if (isSunday) return 5;
-      return 3;
-    }
-    // Afternoon 14:00–17:00 (strong on non-Fri days)
-    if (hour >= 14 && hour <= 17) return 4;
-    if (hour < 7) return 2;
-    return 3;
+    // Mon–Thu
+    if (hour >= 19 && hour <= 22) return 4;
+    if (hour >= 14 && hour <= 16) return 2;
+    return 1;
   }
 
-  // ── YOUTUBE ──
-  // Best: Thu, Fri morning, Sat night, Sun | Upload: 12–16 | Evening: 19–22
-  // Weekend mornings 09–11 strong | Avoid: weekday (Mon–Thu) before 10:00
-  if (platform === "youtube") {
-    // Mon–Thu: avoid mornings before 10:00
-    if (isMonToThu && !isThursday && hour < 10) return 1;
-    if (isThursday && hour < 10) return 1;
-
-    if (isFriday) {
-      if (hour >= 9 && hour <= 11) return 5;  // Friday morning: strong
-      if (hour >= 12 && hour < 14) return 6;  // Upload window before Shabbat prep
-      if (hour >= 20) return 4;               // Friday night (after Shabbat)
-      return 2;
-    }
-
-    // Evening viewing peak 19:00–22:00
-    if (hour >= 19 && hour <= 22) {
-      if (isThursday || isSunday) return 7;
-      return 5;
-    }
-    // Upload window 12:00–16:00 (indexes before evening peak)
-    if (hour >= 12 && hour <= 16) {
-      if (isThursday || isSunday) return 6;
-      return 4;
-    }
-    // Weekend mornings 09:00–11:00 strong
-    if ((isSunday || isThursday) && hour >= 9 && hour <= 11) return 5;
-
-    return 2;
-  }
-
-  return 3;
+  return 1;
 }
 
 function getTooltip(level: number): string {
-  if (level === 0) return "שבת — לא מומלץ לפרסם";
-  if (level === 1) return "פעילות נמוכה — הימנע";
-  if (level <= 2) return "פעילות נמוכה";
-  if (level <= 4) return "שעה בינונית";
-  if (level <= 6) return "שעה טובה לפרסם";
-  return "שעה מומלצת מאוד! ⭐";
+  if (level === 0) return "לא מומלץ לפרסם";
+  if (level === 1) return "פעילות נמוכה";
+  if (level === 2) return "שעה בינונית";
+  if (level === 3) return "שעה טובה לפרסם";
+  return "שעה מומלצת מאוד ⭐";
 }
 
 export default function TimeAnalyzer() {
@@ -136,19 +80,19 @@ export default function TimeAnalyzer() {
 
   const tips = {
     instagram: {
-      good: "ג׳–ה׳ 19:00–21:00 | ג׳–ה׳ 09:00–11:00",
-      medium: "שישי בוקר 09:00–13:00 | 13:00–14:00 כל ימות השבוע",
-      avoid: "שבת כולה | שישי 14:00+ | ראשון לפני 10:00",
+      good: "א׳–ה׳ 19:00–21:00 | א׳–ה׳ 09:00–11:00",
+      medium: "שישי 09:00–13:00 | 13:00–14:00 ימות השבוע",
+      avoid: "שבת כולה | שישי 13:00+",
     },
     tiktok: {
-      good: "ב׳–ה׳ 19:00–23:00 | שישי 20:00–23:00 (אחרי שבת)",
-      medium: "שישי 07:00–13:00 | 14:00–17:00 ימות השבוע",
-      avoid: "שבת כולה | שישי 14:00–20:00 (הכנות לשבת)",
+      good: "א׳–ה׳ 19:00–23:00 | שישי 20:00+ (אחרי שבת)",
+      medium: "א׳–ה׳ 07:00–09:00 | שבת 21:00–23:00",
+      avoid: "שבת עד 20:00 | שישי 10:00–20:00",
     },
     youtube: {
-      good: "ה׳ + ראשון 19:00–22:00 | העלאה 12:00–16:00",
-      medium: "שישי 09:00–13:00 | שבת מוצ״ש 20:00+",
-      avoid: "ב׳–ה׳ לפני 10:00 | שישי 14:00–20:00",
+      good: "א׳–ה׳ 19:00–22:00 | שבת מוצ״ש 20:00+",
+      medium: "שישי 09:00–12:00 | 14:00–16:00 ימות השבוע",
+      avoid: "שבת 00:00–20:00 | שישי 12:00+",
     },
   };
 
@@ -182,9 +126,9 @@ export default function TimeAnalyzer() {
         ))}
       </div>
 
-      {/* Heatmap */}
+      {/* Heatmap — dir="ltr" forces left-to-right hour columns (6→23) */}
       <div className="bg-white border border-gray-200 rounded-2xl p-4 overflow-x-auto">
-        <div className="min-w-max">
+        <div className="min-w-max" dir="ltr">
           {/* Hour headers */}
           <div className="flex mb-1">
             <div className="w-20 shrink-0" />
@@ -198,7 +142,10 @@ export default function TimeAnalyzer() {
           {/* Rows */}
           {DAYS.map((day, dayIdx) => (
             <div key={day} className="flex items-center mb-1">
-              <div className="w-20 shrink-0 text-sm font-medium text-gray-700 text-right pl-2">
+              <div
+                className="w-20 shrink-0 text-sm font-medium text-gray-700 text-right pr-2"
+                dir="rtl"
+              >
                 {day}
               </div>
               {HOURS.map((_, hourIdx) => {
@@ -224,10 +171,10 @@ export default function TimeAnalyzer() {
         </div>
 
         {/* Color legend */}
-        <div className="flex items-center gap-2 mt-4 justify-center flex-wrap">
+        <div className="flex items-center gap-2 mt-4 justify-center flex-wrap" dir="ltr">
           <span className="text-xs text-gray-500">פחות פעיל</span>
-          {[0, 1, 2, 3, 4, 5, 6, 7].map((l) => (
-            <div key={l} className={`w-6 h-4 rounded heatmap-cell-${l}`} />
+          {[0, 1, 2, 3, 4].map((l) => (
+            <div key={l} className={`w-7 h-5 rounded heatmap-cell-${l}`} />
           ))}
           <span className="text-xs text-gray-500">הכי פעיל</span>
         </div>

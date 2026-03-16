@@ -6,7 +6,24 @@ import { SpeedInsights } from "@vercel/speed-insights/next";
 
 export const metadata: Metadata = {
   title: "ViewIL — כלי AI ליוצרי תוכן ישראלים",
-  description: "סקריפטים, לוח תוכן, ניתוח שעות שיא — הכל בעברית, הכל במקום אחד",
+  description:
+    "סקריפטים, לוח תוכן, ניתוח שעות שיא — הכל בעברית, הכל במקום אחד. כלי AI בחינם ליוצרי תוכן ישראלים.",
+  keywords: "יוצרי תוכן, ישראל, AI, סקריפטים, טיקטוק, אינסטגרם, יוטיוב, ViewIL",
+  openGraph: {
+    title: "ViewIL — כלי AI ליוצרי תוכן ישראלים",
+    description: "סקריפטים, לוח תוכן, ניתוח שעות שיא — הכל בעברית, הכל במקום אחד",
+    images: [{ url: "/logo-transparent.png", width: 400, height: 400, alt: "ViewIL" }],
+    locale: "he_IL",
+    type: "website",
+    siteName: "ViewIL",
+  },
+  twitter: {
+    card: "summary",
+    title: "ViewIL — כלי AI ליוצרי תוכן ישראלים",
+    description: "סקריפטים, לוח תוכן, ניתוח שעות שיא — הכל בעברית",
+    images: ["/logo-transparent.png"],
+  },
+  robots: { index: true, follow: true },
 };
 
 export default function RootLayout({

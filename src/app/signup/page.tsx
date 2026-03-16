@@ -4,7 +4,7 @@ import { useState } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Loader2, Eye, EyeOff, Check } from "lucide-react";
+import { Loader2, Eye, EyeOff, Check, Lock } from "lucide-react";
 
 export default function SignupPage() {
   const router = useRouter();
@@ -77,9 +77,13 @@ export default function SignupPage() {
 
         {/* Card */}
         <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-8 shadow-2xl">
-          <h1 className="text-2xl font-extrabold text-white mb-6 text-center">
+          <h1 className="text-2xl font-extrabold text-white mb-2 text-center">
             יצירת חשבון חינם
           </h1>
+          <p className="text-center text-slate-400 text-xs mb-5 flex items-center justify-center gap-1.5">
+            <Lock className="w-3 h-3" />
+            מאובטח עם הצפנת SSL — הפרטים שלך מוגנים לחלוטין
+          </p>
 
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
             <div>

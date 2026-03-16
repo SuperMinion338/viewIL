@@ -86,14 +86,16 @@ body {
   border-radius: 3px;
 }
 
-.heatmap-cell-0 { background-color: #EFF6FF; }
-.heatmap-cell-1 { background-color: #DBEAFE; }
-.heatmap-cell-2 { background-color: #BFDBFE; }
-.heatmap-cell-3 { background-color: #93C5FD; }
-.heatmap-cell-4 { background-color: #60A5FA; }
-.heatmap-cell-5 { background-color: #3B82F6; }
-.heatmap-cell-6 { background-color: #2563EB; }
-.heatmap-cell-7 { background-color: #1D4ED8; }
+/* 5-shade heatmap scale: 0=blocked/very low → 4=peak */
+.heatmap-cell-0 { background-color: #F1F5F9; } /* gray — blocked */
+.heatmap-cell-1 { background-color: #DBEAFE; } /* very light blue — low */
+.heatmap-cell-2 { background-color: #93C5FD; } /* light blue — medium */
+.heatmap-cell-3 { background-color: #3B82F6; } /* blue — high */
+.heatmap-cell-4 { background-color: #1D4ED8; } /* dark blue — peak */
+/* legacy levels kept for compatibility */
+.heatmap-cell-5 { background-color: #1E3A5F; }
+.heatmap-cell-6 { background-color: #0F172A; }
+.heatmap-cell-7 { background-color: #0F172A; }
 
 [contenteditable]:focus {
   outline: 2px solid #2563EB;

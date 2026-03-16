@@ -4,6 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { signOut } from "next-auth/react";
+import { useEffect, useState } from "react";
 import {
   FileText,
   Zap,
@@ -17,11 +18,11 @@ import {
 } from "lucide-react";
 
 const tools = [
-  { id: "script", icon: FileText, label: "כותב סקריפטים" },
-  { id: "hooks", icon: Zap, label: "יוצר הוקים" },
-  { id: "calendar", icon: Calendar, label: "לוח תוכן" },
-  { id: "time", icon: Clock, label: "שעות שיא" },
-  { id: "performance", icon: BarChart2, label: "ניתוח ביצועים" },
+  { id: "script", icon: FileText, label: "כותב סקריפטים", isNew: true },
+  { id: "hooks", icon: Zap, label: "יוצר הוקים", isNew: true },
+  { id: "calendar", icon: Calendar, label: "לוח תוכן", isNew: false },
+  { id: "time", icon: Clock, label: "שעות שיא", isNew: false },
+  { id: "performance", icon: BarChart2, label: "ניתוח ביצועים", isNew: false },
 ];
 
 // Standalone pages linked from sidebar (not studio tools)
@@ -47,6 +48,16 @@ export default function Sidebar({
 }: SidebarProps) {
   const pathname = usePathname();
   const isStandalonePage = pathname !== "/studio";
+  const [scriptsThisMonth, setScriptsThisMonth] = useState<number | null>(null);
+
+  useEffect(() => {
+    fetch("/api/user-stats")
+      .then((r) => r.json())
+      .then((d) => {
+        if (typeof d.scriptsThisMonth === "number") setScriptsThisMonth(d.scriptsThisMonth);
+      })
+      .catch(() => {});
+  }, []);
 
   const initials = userName
     ? userName
@@ -82,7 +93,7 @@ export default function Sidebar({
         <p className="text-white/25 text-[10px] font-bold uppercase tracking-widest px-3 mb-2">
           כלים
         </p>
-        {tools.map(({ id, icon: Icon, label }) => {
+        {tools.map(({ id, icon: Icon, label, isNew }) => {
           const isActive = !isStandalonePage && activeTool === id;
           return (
             <button
@@ -99,7 +110,12 @@ export default function Sidebar({
                   isActive ? "text-white" : "text-white/40 group-hover:text-white/80"
                 }`}
               />
-              <span>{label}</span>
+              <span className="flex-1">{label}</span>
+              {isNew && !isActive && (
+                <span className="text-[9px] font-bold bg-amber-400 text-amber-900 px-1.5 py-0.5 rounded-full leading-none">
+                  חדש
+                </span>
+              )}
               {isActive && (
                 <span className="absolute right-3 top-1/2 -translate-y-1/2 w-1 h-4 rounded-full bg-white/60" />
               )}
@@ -160,6 +176,12 @@ export default function Sidebar({
             <p className="text-white/35 text-xs truncate">{userEmail || "פלן חינמי"}</p>
           </div>
         </Link>
+
+        {scriptsThisMonth !== null && (
+          <div className="mb-2 px-3 py-2 rounded-xl bg-white/5 text-white/40 text-xs text-center">
+            השתמשת ב-<span className="text-white/70 font-bold">{scriptsThisMonth}</span> סקריפטים החודש
+          </div>
+        )}
 
         <button
           onClick={() => signOut({ callbackUrl: "/login" })}
