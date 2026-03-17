@@ -26,6 +26,7 @@ model User {
   analyses          PerformanceAnalysis[]
   referralsSent     Referral[]            @relation("ReferralsSent")
   referralsReceived Referral[]            @relation("ReferralsReceived")
+  contentProjects   ContentProject[]
 }
 
 model Referral {
@@ -98,4 +99,19 @@ model CalendarEvent {
   color     String?
   createdAt DateTime @default(now())
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model ContentProject {
+  id        Int       @id @default(autoincrement())
+  userId    Int
+  title     String
+  platform  String
+  stage     String    @default("idea")
+  priority  String    @default("medium")
+  dueDate   DateTime?
+  notes     String?
+  checklist Json?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 }

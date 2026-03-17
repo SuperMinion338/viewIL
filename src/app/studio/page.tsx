@@ -17,12 +17,16 @@ import CaptionWriter from "@/components/studio/CaptionWriter";
 import BioGenerator from "@/components/studio/BioGenerator";
 import Dashboard from "@/components/studio/Dashboard";
 import RepurposeTool from "@/components/studio/RepurposeTool";
+import ContentProgressManager from "@/components/studio/ContentProgressManager";
+import MobileTopBar from "@/components/studio/MobileTopBar";
+import MobileBottomNav from "@/components/studio/MobileBottomNav";
 
 const TOOL_TITLES: Record<string, string> = {
   dashboard:   "דשבורד",
   script:      "כותב סקריפטים",
   hooks:       "יוצר הוקים",
   repurpose:   "שינוי פורמט תוכן",
+  progress:    "מנהל תהליך יצירה",
   viral:       "ניתוח פוטנציאל ויראלי",
   caption:     "כותב קפשן חכם",
   bio:         "יוצר ביו",
@@ -67,6 +71,7 @@ function StudioContent() {
       case "script":      return <ScriptWriter />;
       case "hooks":       return <HookGenerator />;
       case "repurpose":   return <RepurposeTool />;
+      case "progress":    return <ContentProgressManager onSelectTool={selectTool} />;
       case "viral":       return <ViralScoreAnalyzer />;
       case "caption":     return <CaptionWriter />;
       case "bio":         return <BioGenerator />;
@@ -90,10 +95,11 @@ function StudioContent() {
       />
 
       <div className="flex-1 flex flex-col min-w-0">
-        <header className={`${isDark ? "bg-gray-800 border-gray-700 text-white" : "bg-white border-gray-100"} border-b px-4 md:px-6 py-4 flex items-center justify-between sticky top-0 z-10 shadow-sm`}>
+        <MobileTopBar onThemeChange={setIsDark} />
+        <header className={`hidden md:flex ${isDark ? "bg-gray-800 border-gray-700 text-white" : "bg-white border-gray-100"} border-b px-4 md:px-6 py-4 items-center justify-between sticky top-0 z-10 shadow-sm`}>
           <div>
-            <h1 className={`text-base md:text-lg font-bold ${isDark ? "text-white" : "text-gray-800"}`}>{TOOL_TITLES[activeTool] || "סטודיו"}</h1>
-            <p className={`text-xs hidden sm:block ${isDark ? "text-gray-400" : "text-gray-400"}`}>{getHebrewDate()}</p>
+            <h1 className={`text-lg font-bold ${isDark ? "text-white" : "text-gray-800"}`}>{TOOL_TITLES[activeTool] || "סטודיו"}</h1>
+            <p className={`text-xs ${isDark ? "text-gray-400" : "text-gray-400"}`}>{getHebrewDate()}</p>
           </div>
           <div className="flex items-center gap-2">
             <span className="text-lg">👋</span>
@@ -115,6 +121,7 @@ function StudioContent() {
           </AnimatePresence>
         </main>
       </div>
+      <MobileBottomNav activeTool={activeTool} onSelectTool={selectTool} />
     </div>
   );
 }

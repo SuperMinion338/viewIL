@@ -8,20 +8,24 @@ import { useEffect, useState } from "react";
 import {
   FileText, Zap, Calendar, Clock, BarChart2, LogOut,
   ChevronLeft, User, CircleDollarSign, TrendingUp, MessageSquare,
-  UserCircle2, LayoutDashboard, RefreshCw, Moon, Sun,
+  UserCircle2, LayoutDashboard, RefreshCw, Moon, Sun, BarChart3,
 } from "lucide-react";
 
 const tools = [
-  { id: "dashboard",  icon: LayoutDashboard, label: "דשבורד",        isNew: false },
-  { id: "script",     icon: FileText,        label: "כותב סקריפטים", isNew: false },
-  { id: "hooks",      icon: Zap,             label: "יוצר הוקים",    isNew: false },
-  { id: "repurpose",  icon: RefreshCw,       label: "שינוי פורמט",   isNew: true },
-  { id: "viral",      icon: TrendingUp,      label: "ניתוח ויראלי",  isNew: false },
-  { id: "caption",    icon: MessageSquare,   label: "כותב קפשן",     isNew: false },
-  { id: "bio",        icon: UserCircle2,     label: "יוצר ביו",      isNew: false },
-  { id: "calendar",   icon: Calendar,        label: "לוח תוכן",      isNew: false },
-  { id: "time",       icon: Clock,           label: "שעות שיא",      isNew: false },
-  { id: "performance", icon: BarChart2,      label: "ניתוח ביצועים", isNew: false },
+  { id: "dashboard",   icon: LayoutDashboard, label: "דשבורד",          isNew: false },
+  { id: "script",      icon: FileText,        label: "כותב סקריפטים",   isNew: false },
+  { id: "hooks",       icon: Zap,             label: "יוצר הוקים",      isNew: false },
+  { id: "repurpose",   icon: RefreshCw,       label: "שינוי פורמט",     isNew: false },
+  { id: "viral",       icon: TrendingUp,      label: "ניתוח ויראלי",    isNew: false },
+  { id: "caption",     icon: MessageSquare,   label: "כותב קפשן",       isNew: false },
+  { id: "bio",         icon: UserCircle2,     label: "יוצר ביו",        isNew: false },
+  { id: "calendar",    icon: Calendar,        label: "לוח תוכן",        isNew: false },
+  { id: "time",        icon: Clock,           label: "שעות שיא",        isNew: false },
+  { id: "performance", icon: BarChart2,       label: "ניתוח ביצועים",   isNew: false },
+];
+
+const standaloneToolPages = [
+  { href: "/studio/progress", id: "progress", icon: BarChart3, label: "מנהל יצירה", isNew: true },
 ];
 
 const standalonePages = [
@@ -128,6 +132,32 @@ export default function Sidebar({ activeTool, onSelectTool, userName, userEmail,
               )}
               {isActive && <span className="absolute right-3 top-1/2 -translate-y-1/2 w-1 h-4 rounded-full bg-white/60" />}
             </button>
+          );
+        })}
+
+        <div className="my-2 border-t border-white/8" />
+        <p className="text-white/25 text-[10px] font-bold uppercase tracking-widest px-3 mb-2">ניהול</p>
+
+        {standaloneToolPages.map(({ href, id, icon: Icon, label, isNew }) => {
+          const isActive = pathname === href || pathname.startsWith(href + "/");
+          const showBadge = isNew && !seenBadges.has(id) && !isActive;
+          return (
+            <Link
+              key={id}
+              href={href}
+              className={`relative flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 group ${
+                isActive
+                  ? "bg-blue-600 text-white shadow-[0_0_16px_rgba(37,99,235,0.45)]"
+                  : "text-white/55 hover:text-white hover:bg-white/8"
+              }`}
+            >
+              <Icon className={`w-[18px] h-[18px] shrink-0 transition-colors ${isActive ? "text-white" : "text-white/40 group-hover:text-white/80"}`} />
+              <span className="flex-1">{label}</span>
+              {showBadge && (
+                <span className="text-[9px] font-bold bg-amber-400 text-amber-900 px-1.5 py-0.5 rounded-full leading-none">חדש</span>
+              )}
+              {isActive && <span className="absolute right-3 top-1/2 -translate-y-1/2 w-1 h-4 rounded-full bg-white/60" />}
+            </Link>
           );
         })}
 

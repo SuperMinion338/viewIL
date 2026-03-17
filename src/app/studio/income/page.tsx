@@ -5,6 +5,8 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { Loader2 as LoaderIcon } from "lucide-react";
 import Sidebar from "@/components/studio/Sidebar";
+import MobileTopBar from "@/components/studio/MobileTopBar";
+import MobileBottomNav from "@/components/studio/MobileBottomNav";
 import {
   PlusCircle, Trash2, Download, Loader2, TrendingUp,
   Calendar, DollarSign, BarChart3,
@@ -168,7 +170,8 @@ function IncomeContent() {
       />
 
       <div className="flex-1 flex flex-col min-w-0">
-        <header className="bg-white border-b border-gray-100 px-6 py-4 sticky top-0 z-10 shadow-sm flex items-center justify-between">
+        <MobileTopBar />
+        <header className="hidden md:flex bg-white border-b border-gray-100 px-6 py-4 sticky top-0 z-10 shadow-sm items-center justify-between">
           <div>
             <h1 className="text-lg font-bold text-gray-800">ניהול הכנסות</h1>
             <p className="text-xs text-gray-400">עקוב אחרי כל הכנסות היוצר שלך</p>
@@ -423,6 +426,7 @@ function IncomeContent() {
           </div>
         </main>
       </div>
+      <MobileBottomNav />
     </div>
   );
 }
