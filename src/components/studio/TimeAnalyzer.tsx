@@ -101,8 +101,8 @@ export default function TimeAnalyzer() {
   return (
     <div className="flex flex-col gap-4" dir="rtl">
       <div>
-        <h2 className="text-xl font-bold text-gray-800 mb-1">ניתוח שעות שיא</h2>
-        <p className="text-sm text-gray-500">מתי הקהל הישראלי הכי פעיל? (נתוני 2026)</p>
+        <h2 className="text-xl font-bold text-gray-800 dark:text-white mb-1">ניתוח שעות שיא</h2>
+        <p className="text-sm text-gray-500 dark:text-gray-400">מתי הקהל הישראלי הכי פעיל? (נתוני 2026)</p>
       </div>
 
       {/* Platform tabs */}
@@ -127,13 +127,16 @@ export default function TimeAnalyzer() {
       </div>
 
       {/* Heatmap — dir="ltr" forces left-to-right hour columns (6→23) */}
-      <div className="bg-white border border-gray-200 rounded-2xl p-4 overflow-x-auto">
-        <div className="min-w-max" dir="ltr">
-          {/* Hour headers */}
-          <div className="flex mb-1">
+      <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl p-4 overflow-x-auto">
+        <div className="min-w-[700px]" dir="ltr">
+          {/* Hour headers — same grid as data rows for perfect alignment */}
+          <div
+            className="mb-1"
+            style={{ display: "grid", gridTemplateColumns: "80px repeat(18, 1fr)" }}
+          >
             <div className="w-20 shrink-0" />
             {HOURS.map((h) => (
-              <div key={h} className="w-10 text-center text-xs text-gray-400 font-medium">
+              <div key={h} className="text-center text-xs text-gray-400 font-medium leading-tight">
                 {h}:00
               </div>
             ))}
@@ -141,9 +144,13 @@ export default function TimeAnalyzer() {
 
           {/* Rows */}
           {DAYS.map((day, dayIdx) => (
-            <div key={day} className="flex items-center mb-1">
+            <div
+              key={day}
+              className="mb-1 items-center"
+              style={{ display: "grid", gridTemplateColumns: "80px repeat(18, 1fr)" }}
+            >
               <div
-                className="w-20 shrink-0 text-sm font-medium text-gray-700 text-right pr-2"
+                className="text-sm font-medium text-gray-700 dark:text-gray-300 text-right pr-2 leading-8"
                 dir="rtl"
               >
                 {day}
@@ -153,7 +160,8 @@ export default function TimeAnalyzer() {
                 return (
                   <div
                     key={hourIdx}
-                    className={`w-10 h-8 rounded mx-0.5 cursor-pointer transition hover:scale-110 heatmap-cell-${level}`}
+                    className={`h-8 rounded cursor-pointer transition hover:scale-110 heatmap-cell-${level}`}
+                    style={{ margin: "0 2px" }}
                     onMouseEnter={(e) => {
                       const rect = (e.target as HTMLElement).getBoundingClientRect();
                       setTooltip({

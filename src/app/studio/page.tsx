@@ -50,8 +50,20 @@ function StudioContent() {
 
   useEffect(() => {
     const theme = localStorage.getItem("viewil_theme");
-    setIsDark(theme === "dark");
+    const dark = theme === "dark";
+    setIsDark(dark);
+    if (dark) {
+      document.documentElement.classList.add("dark");
+    }
   }, []);
+
+  useEffect(() => {
+    if (isDark) {
+      document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+    }
+  }, [isDark]);
 
   useEffect(() => {
     const tool = searchParams.get("tool") ?? "dashboard";

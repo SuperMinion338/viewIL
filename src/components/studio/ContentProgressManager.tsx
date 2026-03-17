@@ -861,7 +861,19 @@ export default function ContentProgressManager({ onSelectTool }: Props) {
     (async () => {
       try {
         const data = await apiGet();
-        setProjects(data);
+        // Seed sample projects on first visit if board is empty
+        if (data.length === 0 && localStorage.getItem("viewil_pm_seeded") !== "1") {
+          localStorage.setItem("viewil_pm_seeded", "1");
+          const samples = [
+            { title: "וידאו טיפים לצמיחה ב-TikTok", platform: "tiktok",    priority: "high",   stage: "idea",    dueDate: null, notes: "דוגמה — ערוך או מחק", checklist: null },
+            { title: "Reel שבועי — מאחורי הקלעים",  platform: "instagram", priority: "medium", stage: "script",  dueDate: null, notes: "דוגמה — ערוך או מחק", checklist: null },
+            { title: "יוטיוב לונג-פורם — מדריך SEO", platform: "youtube",  priority: "low",    stage: "filming", dueDate: null, notes: "דוגמה — ערוך או מחק", checklist: null },
+          ];
+          const created = await Promise.all(samples.map((s) => apiCreate(s)));
+          setProjects(created);
+        } else {
+          setProjects(data);
+        }
       } catch (e) {
         console.error(e);
       } finally {

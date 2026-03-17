@@ -9,7 +9,11 @@ export async function GET() {
 
   const userId = Number(session.user.id);
 
-  const [scriptsTotal, hooksTotal, analysesTotal, recentScripts, recentHooks] = await Promise.all([
+  const [
+    scriptsTotal, hooksTotal, analysesTotal,
+    recentScripts, recentHooks, recentCalendar,
+    recentAnalyses, recentProjects, recentIncome,
+  ] = await Promise.all([
     prisma.savedScript.count({ where: { userId } }),
     prisma.savedHook.count({ where: { userId } }),
     prisma.performanceAnalysis.count({ where: { userId } }),
@@ -24,6 +28,30 @@ export async function GET() {
       orderBy: { createdAt: "desc" },
       take: 5,
       select: { id: true, topic: true, createdAt: true },
+    }),
+    prisma.calendarEvent.findMany({
+      where: { userId },
+      orderBy: { createdAt: "desc" },
+      take: 5,
+      select: { id: true, title: true, createdAt: true },
+    }),
+    prisma.performanceAnalysis.findMany({
+      where: { userId },
+      orderBy: { createdAt: "desc" },
+      take: 5,
+      select: { id: true, title: true, createdAt: true },
+    }),
+    prisma.contentProject.findMany({
+      where: { userId },
+      orderBy: { createdAt: "desc" },
+      take: 5,
+      select: { id: true, title: true, createdAt: true },
+    }),
+    prisma.income.findMany({
+      where: { userId },
+      orderBy: { createdAt: "desc" },
+      take: 5,
+      select: { id: true, source: true, amount: true, createdAt: true },
     }),
   ]);
 
@@ -48,11 +76,15 @@ export async function GET() {
 
   // Merge and sort recent activity
   const activity = [
-    ...recentScripts.map((s) => ({ type: "script", text: s.idea, createdAt: s.createdAt })),
-    ...recentHooks.map((h) => ({ type: "hook", text: h.topic, createdAt: h.createdAt })),
+    ...recentScripts.map((s) => ({ type: "script",      text: s.idea,                             createdAt: s.createdAt })),
+    ...recentHooks.map((h) =>   ({ type: "hook",         text: h.topic,                            createdAt: h.createdAt })),
+    ...recentCalendar.map((c) => ({ type: "calendar",    text: c.title,                            createdAt: c.createdAt })),
+    ...recentAnalyses.map((a) => ({ type: "analysis",    text: a.title,                            createdAt: a.createdAt })),
+    ...recentProjects.map((p) => ({ type: "project",     text: p.title,                            createdAt: p.createdAt })),
+    ...recentIncome.map((i) =>   ({ type: "income",      text: `${i.source} — ₪${i.amount}`,      createdAt: i.createdAt })),
   ]
     .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
-    .slice(0, 5)
+    .slice(0, 10)
     .map((a) => ({ ...a, createdAt: a.createdAt.toISOString() }));
 
   return NextResponse.json({ scriptsTotal, hooksTotal, analysesTotal, streak, activity });
